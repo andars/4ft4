@@ -61,12 +61,11 @@ instructions = [
     ('11101111', 'RD3'),
 ]
 
-def desc_to_mask(desc, a):
+def str_to_mask(s, a):
     mask = 0
     base = 8
     for i in range(8):
-        #print(desc, i)
-        if desc[7 - i] == a:
+        if s[7 - i] == a:
             mask = mask | (1 << i)
             base = min(base, i)
     return mask, base
@@ -81,11 +80,7 @@ def desc_to_bin(desc, values={}):
     # and determine operand ids referenced
     # in the first word (in fw_args)
     for i in range(len(fw_str)):
-        if fw_str[i] == '0':
-            inst_base[i] = '0'
-        elif fw_str[i] == '1':
-            inst_base[i] = '1'
-        else:
+        if fw_str[i] not in ['0', '1']:
             inst_base[i] = '0'
             fw_args.add(fw_str[i])
 
@@ -104,14 +99,14 @@ def desc_to_bin(desc, values={}):
     # compute the mask and base for arguments
     # in the second instruction word
     for a in sw_args:
-        mask, base = desc_to_mask(desc[3], a)
+        mask, base = str_to_mask(desc[3], a)
 
         sw_arg_layout[a] = (mask, base)
 
     # compute the mask and base for arguments
     # in the first instruction word
     for a in fw_args:
-        mask, base = desc_to_mask(desc[0], a)
+        mask, base = str_to_mask(desc[0], a)
 
         shift = 0
 
@@ -180,12 +175,6 @@ def inst_to_bin(inst):
 
     return desc_to_bin(desc, operands)
 
-
-
-def bin_to_desc(inst):
-    pass
-
-
 def find_instruction(op):
     for inst in instructions:
         if inst[1] == op:
@@ -197,24 +186,16 @@ def find_instruction_by_bin(inst):
         c = int(desc[0], 2)
         op_mask = desc_to_op_mask(desc)
 
-def write_instruction(op, args={}):
-    inst = find_instruction(op)
-    if not inst:
-        print('invalid')
-
 with open('out.bin', 'wb') as f:
     for o in range(16):
         inst = o << 4
         f.write(struct.pack('<B', inst));
-
-#desc_to_bin(find_instruction('FIN'), {'R': 5})
 
 print("all instructions:")
 for desc in instructions:
     print(desc[0], desc[1])
     desc_to_bin(desc)
     print()
-
 
 print("test")
 assert desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 255}) == (0x20, 0xff)
