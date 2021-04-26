@@ -175,6 +175,43 @@ def inst_to_bin(inst):
 
     return desc_to_bin(desc, operands)
 
+def parse_int(f):
+    if f[0:2] == '0x':
+        return int(f[2:], 16)
+    else:
+        return int(f)
+
+def assemble_line(line):
+    print("assembling line...")
+    line = line.strip()
+    inst_start = 0
+    inst_end = len(line)
+    if ',' in line:
+        label_end = line.index(',')
+        label = line[:label_end]
+        inst_start = label_end + 1
+        print("label ", label)
+    if '/' in line:
+        inst_end = line.index('/')
+        comment = line[inst_end:]
+        print("comment ", comment)
+
+    inst = line[inst_start:inst_end].strip()
+    print("instruction ", inst)
+
+    fields = inst.split(' ')
+    opcode = fields[0]
+    operands = [parse_int(f) for f in fields[1:]]
+
+    if opcode[0].isdigit():
+        # constant data
+        assert len(operands) == 0
+        words = (parse_int(opcode),)
+    else:
+        words = inst_to_bin([opcode] + operands)
+
+    print(['{:02x}'.format(s) for s in words])
+
 def find_instruction(op):
     for inst in instructions:
         if inst[1] == op:
@@ -207,6 +244,9 @@ assert inst_to_bin(['JUN', 0x362]) == (0x43, 0x62)
 assert inst_to_bin(['FIM', 0, 4]) == (0x20, 0x04)
 assert inst_to_bin(['JCN', 6, 0x302]) == (0x16, 0x02)
 print("passed")
+
+assemble_line('FOO, JCN 6 0x302 / comment')
+assemble_line('FOO, 16 / comment')
 
 print("demo")
 desc_to_bin(find_instruction('JUN'), {'A': 0x3e0})
