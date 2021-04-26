@@ -3,12 +3,12 @@ import struct
 
 instructions = [
     # index register instructions
-    ('0011RRR0', 'FIN'),
-    ('0110RRRR', 'INC'),
-    ('1000RRRR', 'ADD'),
-    ('1001RRRR', 'SUB'),
-    ('1010RRRR', 'LD'),
-    ('1011RRRR', 'XCH'),
+    ('0011PPP0', 'FIN', ['P']),
+    ('0110RRRR', 'INC', ['R']),
+    ('1000RRRR', 'ADD', ['R']),
+    ('1001RRRR', 'SUB', ['R']),
+    ('1010RRRR', 'LD',  ['R']),
+    ('1011RRRR', 'XCH', ['R']),
     # accumulator instructions
     ('11110000', 'CLB'),
     ('11110001', 'CLC'),
@@ -27,21 +27,21 @@ instructions = [
     #('11111110', '')
     #('11111111', '')
     # immediate instructions
-    ('0010RRR0', 'FIM', 'DDDDDDDD'),
-    ('1101DDDD', 'LDM'),
+    ('0010PPP0', 'FIM', ['P', 'D'], 'DDDDDDDD'),
+    ('1101DDDD', 'LDM', ['D']),
     # control instructions
-    ('0100AAAA', 'JUN', 'AAAAAAAA'),
-    ('0011RRR1', 'JIN'),
-    ('0001CCCC', 'JCN', 'AAAAAAAA'),
-    ('0111RRRR', 'ISZ', 'AAAAAAAA'),
+    ('0100AAAA', 'JUN', ['A'], 'AAAAAAAA'),
+    ('0011RRR1', 'JIN', ['R']),
+    ('0001CCCC', 'JCN', ['C', 'A'], 'AAAAAAAA'),
+    ('0111RRRR', 'ISZ', ['R', 'A'], 'AAAAAAAA'),
     # subroutine linkage instructions
-    ('0101AAAA', 'JMS', 'AAAAAAAA'),
-    ('1100DDDD', 'BBL'),
+    ('0101AAAA', 'JMS', ['A'], 'AAAAAAAA'),
+    ('1100DDDD', 'BBL', ['D']),
     # nop
     ('00000000', 'NOP'),
     # memory selection
     ('11111101', 'DCL'),
-    ('0010RRR1', 'SRC'),
+    ('0010PPP1', 'SRC', ['P']),
     # i/o and RAM instructions
     ('11100000', 'WRM'),
     ('11100001', 'WMP'),
@@ -89,9 +89,9 @@ def desc_to_bin(desc, values={}):
             inst_base[i] = '0'
             fw_args.add(fw_str[i])
 
-    if len(desc) > 2:
+    if len(desc) > 3:
         # two-word instruction
-        sw_str = desc[2]
+        sw_str = desc[3]
 
         # determine operand ids referenced
         # in the second word (in sw_args)
@@ -104,7 +104,7 @@ def desc_to_bin(desc, values={}):
     # compute the mask and base for arguments
     # in the second instruction word
     for a in sw_args:
-        mask, base = desc_to_mask(desc[2], a)
+        mask, base = desc_to_mask(desc[3], a)
 
         sw_arg_layout[a] = (mask, base)
 
@@ -136,7 +136,7 @@ def desc_to_bin(desc, values={}):
 
         inst = inst | part
 
-    if len(desc) > 2:
+    if len(desc) > 3:
         inst_sw = 0
 
         # compute the second word for
@@ -158,6 +158,29 @@ def desc_to_bin(desc, values={}):
     else: 
         print("inst: {:02x} - {:08b}".format(inst, inst))
         return inst
+
+def get_desc_and_operands(inst):
+    op = inst[0]
+    desc = find_instruction(op)
+
+    operand_count = len(inst) - 1
+    assert operand_count == len(desc[2])
+
+    operand_map = {}
+
+    for i in range(operand_count):
+        value = inst[i+1]
+        name = desc[2][i]
+        operand_map[name] = value
+
+    return desc, operand_map
+
+def inst_to_bin(inst):
+    desc, operands = get_desc_and_operands(inst)
+
+    return desc_to_bin(desc, operands)
+
+
 
 def bin_to_desc(inst):
     pass
@@ -194,7 +217,14 @@ for desc in instructions:
 
 
 print("test")
-assert desc_to_bin(find_instruction('FIM'), {'R': 0, 'D': 255}) == (0x20, 0xff)
+assert desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 255}) == (0x20, 0xff)
+assert inst_to_bin(['FIM', 0, 255]) == (0x20, 0xff)
+assert inst_to_bin(['JUN', 0x3e0]) == (0x43, 0xe0)
+assert inst_to_bin(['ADD', 1]) == (0x81)
+assert inst_to_bin(['LDM', 3]) == (0xd3)
+assert inst_to_bin(['JUN', 0x362]) == (0x43, 0x62)
+assert inst_to_bin(['FIM', 0, 4]) == (0x20, 0x04)
+assert inst_to_bin(['JCN', 6, 0x302]) == (0x16, 0x02)
 print("passed")
 
 print("demo")
@@ -202,5 +232,5 @@ desc_to_bin(find_instruction('JUN'), {'A': 0x3e0})
 desc_to_bin(find_instruction('ADD'), {'R': 1})
 desc_to_bin(find_instruction('LDM'), {'D': 3})
 desc_to_bin(find_instruction('JUN'), {'A': 0x362})
-desc_to_bin(find_instruction('FIM'), {'R': 0, 'D': 4})
+desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 4})
 desc_to_bin(find_instruction('JUN'), {'A': 0x370})
