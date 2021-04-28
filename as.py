@@ -62,6 +62,8 @@ instructions = [
     ('11101111', 'RD3'),
 ]
 
+labels = {}
+
 def str_to_mask(s, a):
     mask = 0
     base = 8
@@ -177,18 +179,26 @@ def inst_to_bin(inst):
 
     return desc_to_bin(desc, operands)
 
-def parse_int(f):
+def parse_value(f):
+    print("reading ", f)
     if f[0:2] == '0x':
-        return int(f[2:], 16)
+        v = int(f[2:], 16)
+        print("hex -> {:02x} = {}".format(v,v))
     elif f[-1] == 'P':
         # register pair symbols
         v = int(f[0])
         assert 0 <= v and v <= 7
-        return v * 2
+        v = v * 2
+        print("pair -> ", v)
+    elif f in labels:
+        v = labels[f]
+        print("label -> ", v)
     else:
-        return int(f)
+        v = int(f)
+        print("int -> ", v)
+    return v
 
-def assemble_line(line):
+def assemble_line(line, loc=0):
     print("assembling line...")
     line = line.strip()
     inst_start = 0
@@ -198,6 +208,7 @@ def assemble_line(line):
         label = line[:label_end]
         inst_start = label_end + 1
         print("label ", label)
+        labels[label] = loc
     if '/' in line:
         inst_end = line.index('/')
         comment = line[inst_end:]
@@ -208,7 +219,7 @@ def assemble_line(line):
 
     fields = inst.split(' ')
     opcode = fields[0]
-    operands = [parse_int(f) for f in fields[1:]]
+    operands = [parse_value(f) for f in fields[1:]]
 
     print("'{}'".format(opcode))
 
@@ -216,12 +227,14 @@ def assemble_line(line):
         if opcode[0].isdigit():
             # constant data
             assert len(operands) == 0
-            words = (parse_int(opcode),)
+            words = (parse_value(opcode),)
         else:
             words = inst_to_bin([opcode] + operands)
         print(['{:02x}'.format(s) for s in words])
+        return words
     else:
         print("no opcode")
+        return ()
 
 
 def find_instruction(op):
@@ -269,8 +282,19 @@ desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 4})
 desc_to_bin(find_instruction('JUN'), {'A': 0x370})
 
 if len(sys.argv) > 1:
+    out = []
+    loc = 0
+    labels = {}
     print("assembling ", sys.argv[1])
     with open(sys.argv[1], 'r') as f_in:
         for line in f_in.readlines():
             print(line.strip())
-            assemble_line(line)
+            words = assemble_line(line, loc)
+            for w in words:
+                out.append(w)
+                loc += 1
+
+    print(labels)
+    for i in range(len(out)):
+        w = out[i]
+        print("{:04x}: {:02x}".format(i, w))
