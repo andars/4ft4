@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import struct
 
 instructions = [
@@ -152,14 +153,15 @@ def desc_to_bin(desc, values={}):
         return inst, inst_sw
     else: 
         print("inst: {:02x} - {:08b}".format(inst, inst))
-        return inst
+        return inst,
 
 def get_desc_and_operands(inst):
     op = inst[0]
     desc = find_instruction(op)
 
     operand_count = len(inst) - 1
-    assert operand_count == len(desc[2])
+    expected = len(desc[2]) if len(desc) >= 3 else 0
+    assert operand_count == expected
 
     operand_map = {}
 
@@ -178,6 +180,11 @@ def inst_to_bin(inst):
 def parse_int(f):
     if f[0:2] == '0x':
         return int(f[2:], 16)
+    elif f[-1] == 'P':
+        # register pair symbols
+        v = int(f[0])
+        assert 0 <= v and v <= 7
+        return v * 2
     else:
         return int(f)
 
@@ -203,14 +210,19 @@ def assemble_line(line):
     opcode = fields[0]
     operands = [parse_int(f) for f in fields[1:]]
 
-    if opcode[0].isdigit():
-        # constant data
-        assert len(operands) == 0
-        words = (parse_int(opcode),)
-    else:
-        words = inst_to_bin([opcode] + operands)
+    print("'{}'".format(opcode))
 
-    print(['{:02x}'.format(s) for s in words])
+    if opcode:
+        if opcode[0].isdigit():
+            # constant data
+            assert len(operands) == 0
+            words = (parse_int(opcode),)
+        else:
+            words = inst_to_bin([opcode] + operands)
+        print(['{:02x}'.format(s) for s in words])
+    else:
+        print("no opcode")
+
 
 def find_instruction(op):
     for inst in instructions:
@@ -238,8 +250,8 @@ print("test")
 assert desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 255}) == (0x20, 0xff)
 assert inst_to_bin(['FIM', 0, 255]) == (0x20, 0xff)
 assert inst_to_bin(['JUN', 0x3e0]) == (0x43, 0xe0)
-assert inst_to_bin(['ADD', 1]) == (0x81)
-assert inst_to_bin(['LDM', 3]) == (0xd3)
+assert inst_to_bin(['ADD', 1]) == (0x81,)
+assert inst_to_bin(['LDM', 3]) == (0xd3,)
 assert inst_to_bin(['JUN', 0x362]) == (0x43, 0x62)
 assert inst_to_bin(['FIM', 0, 4]) == (0x20, 0x04)
 assert inst_to_bin(['JCN', 6, 0x302]) == (0x16, 0x02)
@@ -255,3 +267,10 @@ desc_to_bin(find_instruction('LDM'), {'D': 3})
 desc_to_bin(find_instruction('JUN'), {'A': 0x362})
 desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 4})
 desc_to_bin(find_instruction('JUN'), {'A': 0x370})
+
+if len(sys.argv) > 1:
+    print("assembling ", sys.argv[1])
+    with open(sys.argv[1], 'r') as f_in:
+        for line in f_in.readlines():
+            print(line.strip())
+            assemble_line(line)
