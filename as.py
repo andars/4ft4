@@ -298,3 +298,8 @@ if len(sys.argv) > 1:
     for i in range(len(out)):
         w = out[i]
         print("{:04x}: {:02x}".format(i, w))
+
+    output_name = sys.argv[1][:sys.argv[1].rfind(".")] + ".bin"
+    with open(output_name, 'wb') as f_out:
+        print("writing {} bytes to {}".format(len(out), output_name))
+        f_out.write(bytes(out))
