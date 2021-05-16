@@ -22,6 +22,8 @@ int randomize_state = 0;
 #define NUM_RAMS 4
 
 typedef struct {
+    uint16_t pc;
+
     uint8_t accumulator;
     uint8_t carry;
     uint8_t registers[16];
@@ -255,12 +257,26 @@ void add_ram(void) {
     state.accumulator = lo(result);
 }
 
+int read_instruction(FILE *in, uint8_t *inst) {
+    size_t count;
+
+    fseek(in, state.pc, SEEK_SET);
+
+    count = fread(inst, 1, 1, in);
+
+    state.pc++;
+
+    return count;
+}
+
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t loc = ftell(in);
     size_t count;
 
-    count = fread(&inst, 1, 1, in);
+    fseek(in, state.pc, SEEK_SET);
+
+    count = read_instruction(in, &inst);
     if (count == 0) {
         // end of file, no instruction
         return 0;
@@ -270,7 +286,7 @@ int exec_instruction(FILE *in) {
 
     if (hi(inst) == 0x3) {
         if ((inst & 0x1) == 0) {
-            fread(&second, 1, 1, in);
+            read_instruction(in, &second);
             printf("FIN\n");
         }
     } else if (hi(inst) == 0x6) {
@@ -300,7 +316,7 @@ int exec_instruction(FILE *in) {
         }
     } else if (hi(inst) == 0x2) {
         if ((inst & 0x1) == 0) {
-            fread(&second, 1, 1, in);
+            read_instruction(in, &second);
             printf("FIM\n");
             fetch_immediate(inst, second);
         } else {
@@ -310,18 +326,18 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0xd) {
         printf("LDM\n");
     } else if (hi(inst) == 0x4) {
-        fread(&second, 1, 1, in);
+        read_instruction(in, &second);
         printf("JUN\n");
     } else if (hi(inst) == 0x3) {
         printf("JIN\n");
     } else if (hi(inst) == 0x1) {
-        fread(&second, 1, 1, in);
+        read_instruction(in, &second);
         printf("JCN\n");
     } else if (hi(inst) == 0x7) {
-        fread(&second, 1, 1, in);
+        read_instruction(in, &second);
         printf("ISZ\n");
     } else if (hi(inst) == 0x5) {
-        fread(&second, 1, 1, in);
+        read_instruction(in, &second);
         printf("JMS\n");
     } else if (hi(inst) == 0xc) {
         printf("BBL\n");
