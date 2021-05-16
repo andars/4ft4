@@ -19,6 +19,7 @@ typedef struct {
     uint8_t accumulator;
     uint8_t carry;
     uint8_t registers[16];
+    uint8_t address;
 } ProcessorState;
 
 ProcessorState state;
@@ -194,6 +195,18 @@ void fetch_immediate(uint8_t inst, uint8_t data) {
     state.registers[reg + 1] = lo(data);
 }
 
+void set_address(uint8_t inst) {
+    uint8_t reg = lo(inst);
+    printf("reg %d\n", reg);
+
+    // TODO: this also sends the address to the ROMs and RAMs. should
+    // those be simulated separately, or just simulate the entire system
+    // together?
+
+    uint8_t address = (state.registers[reg] << 4) | state.registers[reg + 1];
+    state.address = address;
+}
+
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t loc = ftell(in);
@@ -244,6 +257,7 @@ int exec_instruction(FILE *in) {
             fetch_immediate(inst, second);
         } else {
             printf("SRC\n");
+            set_address(inst);
         }
     } else if (hi(inst) == 0xd) {
         printf("LDM\n");
