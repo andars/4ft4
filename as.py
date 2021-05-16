@@ -188,7 +188,6 @@ def parse_value(f):
         # register pair symbols
         v = int(f[0])
         assert 0 <= v and v <= 7
-        v = v * 2
         print("pair -> ", v)
     elif f in labels:
         v = labels[f]
