@@ -18,11 +18,16 @@ void exec_fin() {
 
 int randomize_state = 0;
 
+#define RAM_SIZE (4 * 16)
+#define NUM_RAMS 4
+
 typedef struct {
     uint8_t accumulator;
     uint8_t carry;
     uint8_t registers[16];
     uint8_t address;
+
+    uint8_t ram[NUM_RAMS * RAM_SIZE];
 } ProcessorState;
 
 ProcessorState state;
@@ -56,6 +61,12 @@ void randomize_processor_state() {
     }
     state.address = lo(rand());
     state.carry = rand() % 2;
+}
+
+void init_ram() {
+    state.ram[0] = 1;
+
+    state.ram[16] = 3;
 }
 
 void exec_alu_inst(uint8_t inst, AluOp op) {
@@ -208,7 +219,7 @@ void fetch_immediate(uint8_t inst, uint8_t data) {
 }
 
 void set_address(uint8_t inst) {
-    uint8_t reg = lo(inst);
+    uint8_t reg = lo(inst) & ~0x1;
     printf("reg %d\n", reg);
 
     // TODO: this also sends the address to the ROMs and RAMs. should
@@ -217,6 +228,31 @@ void set_address(uint8_t inst) {
 
     uint8_t address = (state.registers[reg] << 4) | state.registers[reg + 1];
     state.address = address;
+}
+
+void read_ram(void) {
+    uint8_t value = lo(state.ram[state.address]);
+
+    printf("read 0x%x from 0x%x\n", value, state.address);
+
+    state.accumulator = value;
+}
+
+void write_ram(void) {
+    uint8_t value = state.accumulator;
+
+    printf("write 0x%x to 0x%x\n", value, state.address);
+
+    state.ram[state.address] = value;
+}
+
+void add_ram(void) {
+    uint8_t value = lo(state.ram[state.address]);
+
+    uint8_t result = state.accumulator + value + state.carry;
+
+    state.carry = (result >> 4) & 0x1;
+    state.accumulator = lo(result);
 }
 
 int exec_instruction(FILE *in) {
@@ -301,6 +337,7 @@ int exec_instruction(FILE *in) {
 
         if (code == 0x0) {
             printf("WRM\n");
+            write_ram();
         } else if (code == 0x1) {
             printf("WMP\n");
         } else if (code == 0x2) {
@@ -314,10 +351,12 @@ int exec_instruction(FILE *in) {
             printf("SBM\n");
         } else if (code == 0x9) {
             printf("RDM\n");
+            read_ram();
         } else if (code == 0xa) {
             printf("RDR\n");
         } else if (code == 0xb) {
             printf("ADM\n");
+            add_ram();
         } else if (0xc <= code && code <= 0xf) {
             uint8_t index = code - 0xc;
             printf("RD%d\n", index);
@@ -358,6 +397,8 @@ int main(int argc, char *argv[]) {
     if (randomize_state) {
         randomize_processor_state();
     }
+
+    init_ram();
 
     printf("loading %s\n", binary);
 
