@@ -31,6 +31,20 @@ typedef enum {
     XCH,
 } AluOp;
 
+void print_processor_state() {
+    printf("---\n");
+    printf("Current state:\n");
+    printf(" accumulator: 0x%x\n", state.accumulator);
+    for (int i = 0; i < 16; i+=2) {
+        printf(" register %2d: 0x%x", i, state.registers[i]);
+        printf(" |");
+        printf(" register %2d: 0x%x", i + 1, state.registers[i + 1]);
+        printf(" - %dP : 0x%02x\n", i/2, (state.registers[i] << 4) | state.registers[i+1]);
+    }
+    printf(" carry: %d\n", state.carry);
+    printf("---\n");
+}
+
 void exec_alu_inst(uint8_t inst, AluOp op) {
     printf("ALU: 0x%x, %d\n", inst, op);
 
@@ -277,6 +291,8 @@ int exec_instruction(FILE *in) {
         printf("unknown\n");
         exit(1);
     }
+
+    print_processor_state();
 
 
     return 1;
