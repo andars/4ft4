@@ -186,6 +186,14 @@ void exec_acc_inst(uint8_t inst) {
     state.carry = carry_out;
 }
 
+void fetch_immediate(uint8_t inst, uint8_t data) {
+    uint8_t reg = lo(inst);
+    printf("reg %d\n", reg);
+
+    state.registers[reg] = hi(data);
+    state.registers[reg + 1] = lo(data);
+}
+
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t loc = ftell(in);
@@ -233,6 +241,7 @@ int exec_instruction(FILE *in) {
         if ((inst & 0x1) == 0) {
             fread(&second, 1, 1, in);
             printf("FIM\n");
+            fetch_immediate(inst, second);
         } else {
             printf("SRC\n");
         }
