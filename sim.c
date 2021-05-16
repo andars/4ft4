@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 uint8_t hi(uint8_t in) {
     return (in >> 4);
@@ -14,6 +15,8 @@ uint8_t lo(uint8_t in) {
 void exec_fin() {
 
 }
+
+int randomize_state = 0;
 
 typedef struct {
     uint8_t accumulator;
@@ -44,6 +47,15 @@ void print_processor_state() {
     }
     printf(" carry: %d\n", state.carry);
     printf("---\n");
+}
+
+void randomize_processor_state() {
+    state.accumulator = lo(rand());
+    for (int i = 0; i < 16; i++) {
+        state.registers[i] = lo(rand());
+    }
+    state.address = lo(rand());
+    state.carry = rand() % 2;
 }
 
 void exec_alu_inst(uint8_t inst, AluOp op) {
@@ -324,14 +336,32 @@ int exec_instruction(FILE *in) {
 int main(int argc, char *argv[]) {
     printf("simulator\n");
 
+    char *binary = NULL;
+
     if (argc < 2) {
         printf("usage: ./sim <binary>\n");
         return 1;
     }
 
-    printf("loading %s\n", argv[1]);
+    for (int i = 1; i < argc; i++) {
+        char *arg = argv[i];
+        if (strcmp(arg, "-r") == 0) {
+            randomize_state = 1;
+        } else if (!binary) {
+            binary = arg;
+        } else {
+            printf("invalid arguments\n");
+            return 1;
+        }
+    }
 
-    FILE *input = fopen(argv[1], "rb");
+    if (randomize_state) {
+        randomize_processor_state();
+    }
+
+    printf("loading %s\n", binary);
+
+    FILE *input = fopen(binary, "rb");
 
     while (exec_instruction(input));
 
