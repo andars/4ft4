@@ -269,6 +269,16 @@ int read_instruction(FILE *in, uint8_t *inst) {
     return count;
 }
 
+void increment_and_jump_if_zero(uint8_t inst, uint8_t target) {
+    uint8_t reg = lo(inst);
+
+    state.registers[reg] = lo(state.registers[reg] + 1);
+
+    if (state.registers[reg] != 0) {
+        state.pc = (state.pc & ~0xff) | target;
+    }
+}
+
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t loc = ftell(in);
@@ -336,6 +346,7 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0x7) {
         read_instruction(in, &second);
         printf("ISZ\n");
+        increment_and_jump_if_zero(inst, second);
     } else if (hi(inst) == 0x5) {
         read_instruction(in, &second);
         printf("JMS\n");
