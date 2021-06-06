@@ -265,6 +265,16 @@ void add_from_ram(void) {
     state.accumulator = lo(result);
 }
 
+void sub_from_ram(void) {
+    uint8_t value = lo(state.ram[state.address]);
+
+    uint8_t result = state.accumulator + lo(~value) + ((~state.carry) & 0x1);
+
+    // carry bit is set if the subtraction requires a borrow
+    state.carry = (result >> 4) & 0x1;
+    state.accumulator = lo(result);
+}
+
 void write_ram_port(void) {
     uint8_t selected_ram = (state.address >> 6);
 
@@ -422,6 +432,7 @@ int exec_instruction(FILE *in) {
             write_ram_status(index);
         } else if (code == 0x8) {
             printf("SBM\n");
+            sub_from_ram();
         } else if (code == 0x9) {
             printf("RDM\n");
             read_ram();
