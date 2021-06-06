@@ -18,8 +18,12 @@ void exec_fin() {
 
 int randomize_state = 0;
 
-#define RAM_SIZE (4 * 16)
+#define NUM_REGS_PER_RAM 4
+#define RAM_REG_WIDTH 16 // each RAM reg is 16 4-bit characters
+#define RAM_STATUS_PER_REG 4
+#define RAM_SIZE (NUM_REGS_PER_RAM * RAM_REG_WIDTH)
 #define NUM_RAMS 4
+#define NUM_ROMS 2
 
 typedef struct {
     uint16_t pc;
@@ -30,6 +34,10 @@ typedef struct {
     uint8_t address;
 
     uint8_t ram[NUM_RAMS * RAM_SIZE];
+    uint8_t ram_status[NUM_RAMS * NUM_REGS_PER_RAM * RAM_STATUS_PER_REG];
+
+    uint8_t ram_ports[NUM_RAMS];
+    uint8_t rom_ports[NUM_ROMS];
 } ProcessorState;
 
 ProcessorState state;
@@ -248,13 +256,46 @@ void write_ram(void) {
     state.ram[state.address] = value;
 }
 
-void add_ram(void) {
+void add_from_ram(void) {
     uint8_t value = lo(state.ram[state.address]);
 
     uint8_t result = state.accumulator + value + state.carry;
 
     state.carry = (result >> 4) & 0x1;
     state.accumulator = lo(result);
+}
+
+void write_ram_port(void) {
+    uint8_t selected_ram = (state.address >> 6);
+
+    assert(selected_ram < NUM_RAMS);
+    state.ram_ports[selected_ram] = state.accumulator;
+}
+
+void write_ram_status(uint8_t index) {
+    uint8_t selected_ram_reg = hi(state.address);
+
+    state.ram_status[RAM_STATUS_PER_REG * selected_ram_reg + index] = state.accumulator;
+}
+
+void read_ram_status(uint8_t index) {
+    uint8_t selected_ram_reg = hi(state.address);
+
+    state.accumulator = state.ram_status[RAM_STATUS_PER_REG * selected_ram_reg + index];
+}
+
+void write_rom_port(void) {
+    uint8_t selected_rom = hi(state.address);
+
+    assert(selected_rom < NUM_ROMS);
+    state.rom_ports[selected_rom] = state.accumulator;
+}
+
+void read_rom_port(void) {
+    uint8_t selected_rom = hi(state.address);
+
+    assert(selected_rom < NUM_ROMS);
+    state.accumulator = state.rom_ports[selected_rom];
 }
 
 int read_instruction(FILE *in, uint8_t *inst) {
@@ -367,13 +408,18 @@ int exec_instruction(FILE *in) {
             write_ram();
         } else if (code == 0x1) {
             printf("WMP\n");
+            write_ram_port();
         } else if (code == 0x2) {
             printf("WRR\n");
+            write_rom_port();
         } else if (code == 0x3) {
             printf("WPM\n");
+            printf("unimplemented!\n");
+            exit(1);
         } else if (0x4 <= code && code <= 0x7) {
             uint8_t index = code - 0x4;
             printf("WR%d\n", index);
+            write_ram_status(index);
         } else if (code == 0x8) {
             printf("SBM\n");
         } else if (code == 0x9) {
@@ -381,12 +427,14 @@ int exec_instruction(FILE *in) {
             read_ram();
         } else if (code == 0xa) {
             printf("RDR\n");
+            read_rom_port();
         } else if (code == 0xb) {
             printf("ADM\n");
-            add_ram();
+            add_from_ram();
         } else if (0xc <= code && code <= 0xf) {
             uint8_t index = code - 0xc;
             printf("RD%d\n", index);
+            read_ram_status(index);
         }
     } else {
         printf("unknown\n");
