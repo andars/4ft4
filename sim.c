@@ -38,6 +38,8 @@ typedef struct {
 
     uint8_t ram_ports[NUM_RAMS];
     uint8_t rom_ports[NUM_ROMS];
+
+    uint8_t test_signal;
 } ProcessorState;
 
 ProcessorState state;
@@ -235,6 +237,67 @@ void fetch_immediate(uint8_t inst, uint8_t data) {
     state.registers[reg + 1] = lo(data);
 }
 
+void jump_12(uint16_t target) {
+    state.pc = target;
+}
+
+void jump_unconditional(uint8_t inst, uint8_t second) {
+    uint16_t target = (((uint16_t)lo(inst)) << 8) | second;
+
+    jump_12(target);
+}
+
+void jump_8(uint8_t target) {
+    uint8_t target_12 = (state.pc & ~0xff) | target;
+    jump_12(target_12);
+}
+
+void jump_indirect(uint8_t inst) {
+    uint8_t reg = lo(inst) & ~0x1;
+
+    uint8_t target_8 = (state.registers[reg] << 4) | state.registers[reg + 1];
+    jump_8(target_8);
+}
+
+#define COND_TEST  (1 << 0x0)
+#define COND_CARRY (1 << 0x1)
+#define COND_ACC   (1 << 0x2)
+#define COND_INV   (1 << 0x4)
+void jump_conditional(uint8_t inst, uint8_t second) {
+    uint8_t cond_spec = lo(inst);
+    uint8_t target_8 = second;
+
+    int take_branch = 0;
+
+    if (cond_spec & COND_ACC) {
+        take_branch = take_branch || (state.accumulator == 0);
+    }
+    if (cond_spec & COND_CARRY) {
+        take_branch = take_branch || (state.carry == 1);
+    }
+    if (cond_spec & COND_TEST) {
+        take_branch = take_branch || (state.test_signal == 1);
+    }
+
+    if (cond_spec & COND_INV) {
+        take_branch = !take_branch;
+    }
+
+    if (take_branch) {
+        jump_8(target_8);
+    }
+}
+
+void increment_and_jump_if_zero(uint8_t inst, uint8_t target) {
+    uint8_t reg = lo(inst);
+
+    state.registers[reg] = lo(state.registers[reg] + 1);
+
+    if (state.registers[reg] != 0) {
+        jump_8(target);
+    }
+}
+
 void set_address(uint8_t inst) {
     uint8_t reg = lo(inst) & ~0x1;
     printf("reg %d\n", reg);
@@ -327,16 +390,6 @@ int read_instruction(FILE *in, uint8_t *inst) {
     return count;
 }
 
-void increment_and_jump_if_zero(uint8_t inst, uint8_t target) {
-    uint8_t reg = lo(inst);
-
-    state.registers[reg] = lo(state.registers[reg] + 1);
-
-    if (state.registers[reg] != 0) {
-        state.pc = (state.pc & ~0xff) | target;
-    }
-}
-
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t loc = ftell(in);
@@ -399,14 +452,14 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0x4) {
         read_instruction(in, &second);
         printf("JUN\n");
-        //TODO(inst)
+        jump_unconditional(inst, second);
     } else if (hi(inst) == 0x3) {
         printf("JIN\n");
-        //TODO(inst)
+        jump_indirect(inst);
     } else if (hi(inst) == 0x1) {
         read_instruction(in, &second);
         printf("JCN\n");
-        //TODO(inst)
+        jump_conditional(inst, second);
     } else if (hi(inst) == 0x7) {
         read_instruction(in, &second);
         printf("ISZ\n");
