@@ -214,10 +214,17 @@ void exec_acc_inst(uint8_t inst) {
         }
     } else {
         assert(0);
+        exit(1);
     }
 
     state.accumulator = acc_out;
     state.carry = carry_out;
+}
+
+void load_accumulator(uint8_t inst) {
+    uint8_t immediate = lo(inst);
+
+    state.accumulator = immediate;
 }
 
 void fetch_immediate(uint8_t inst, uint8_t data) {
@@ -386,6 +393,7 @@ int exec_instruction(FILE *in) {
         }
     } else if (hi(inst) == 0xd) {
         printf("LDM\n");
+        load_accumulator(inst);
     } else if (hi(inst) == 0x4) {
         read_instruction(in, &second);
         printf("JUN\n");
@@ -453,7 +461,6 @@ int exec_instruction(FILE *in) {
     }
 
     print_processor_state();
-
 
     return 1;
 }
