@@ -356,6 +356,7 @@ int exec_instruction(FILE *in) {
         if ((inst & 0x1) == 0) {
             read_instruction(in, &second);
             printf("FIN\n");
+            //TODO(inst)
         }
     } else if (hi(inst) == 0x6) {
         printf("INC\n");
@@ -378,6 +379,7 @@ int exec_instruction(FILE *in) {
             exec_acc_inst(inst);
         } else if (lo(inst) == 0xd) {
             printf("DCL\n");
+            //TODO(inst)
         } else {
             printf("unknown\n");
             exit(1);
@@ -397,11 +399,14 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0x4) {
         read_instruction(in, &second);
         printf("JUN\n");
+        //TODO(inst)
     } else if (hi(inst) == 0x3) {
         printf("JIN\n");
+        //TODO(inst)
     } else if (hi(inst) == 0x1) {
         read_instruction(in, &second);
         printf("JCN\n");
+        //TODO(inst)
     } else if (hi(inst) == 0x7) {
         read_instruction(in, &second);
         printf("ISZ\n");
@@ -409,8 +414,10 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0x5) {
         read_instruction(in, &second);
         printf("JMS\n");
+        //TODO(inst)
     } else if (hi(inst) == 0xc) {
         printf("BBL\n");
+        //TODO(inst)
     } else if (hi(inst) == 0x0) {
         if (lo(inst) == 0x0) {
             printf("NOP\n");
