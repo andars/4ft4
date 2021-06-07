@@ -17,7 +17,8 @@ $(TEST_BINARIES): build/%.bin: tests/%.s
 
 .PHONY: $(TEST_LOGS)
 $(TEST_LOGS): build/%.log: build/%.bin tests/%.s sim
-	(bash ./tests/run.sh $(word 2,$^) $(word 1,$^) || echo "test $(word 2,$^) failed: $@") | tee $@
+	bash ./tests/run.sh $(word 2,$^) $(word 1,$^) > $@ || (cat $@; echo "test $(word 2,$^) failed: $@"; exit 1)
+	cat $@
 
 run-%: build/%.bin
 	echo "running test for $*"
