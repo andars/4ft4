@@ -103,11 +103,10 @@ void exec_alu_inst(uint8_t inst, AluOp op) {
         acc_out = result & 0xf;
         carry_out = (result >> 4) & 0x1;
     } else if (op == SUB) {
-        uint8_t result = acc_in - reg_in - carry_in;
+        uint8_t result = acc_in + lo(~reg_in) + ((~carry_in) & 0x1);
 
         acc_out = result & 0xf;
-
-        // TODO: carry_out
+        carry_out = (result >> 4) & 0x1;
     } else if (op == LD) {
         acc_out = reg_in;
     } else if (op == XCH) {
