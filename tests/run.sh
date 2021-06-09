@@ -23,6 +23,10 @@ while read -r cmd args; do
         expected+=("$args");
     fi
 
+    if [ $cmd = '!cycles' ]; then
+        sim_args="$sim_args -c $args"
+    fi
+
 done < <(grep '!' $source)
 
 echo "sim_args $sim_args"

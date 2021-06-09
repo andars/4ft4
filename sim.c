@@ -64,6 +64,7 @@ void print_processor_state() {
         printf(" - %dP : 0x%02x\n", i/2, (state.registers[i] << 4) | state.registers[i+1]);
     }
     printf(" carry: %d\n", state.carry);
+    printf(" pc: 0x%x\n", state.pc);
     printf("---\n");
 }
 
@@ -526,7 +527,7 @@ int exec_instruction(FILE *in) {
 }
 
 void print_usage() {
-    printf("usage: ./sim [-r] <binary>\n");
+    printf("usage: ./sim [-r] [-c <cycle_count>] <binary>\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -540,11 +541,20 @@ int main(int argc, char *argv[]) {
     }
 
     int opt;
+    int cycles = -1;
 
-    while ((opt = getopt(argc, argv, "r")) != -1) {
+    while ((opt = getopt(argc, argv, "rc:")) != -1) {
         switch (opt) {
         case 'r':
             randomize_state = 1;
+            break;
+        case 'c':
+            cycles = atoi(optarg);
+            if (cycles == 0) {
+                printf("cycle count must be positive\n");
+                print_usage();
+                return 1;
+            }
             break;
         default:
             printf("invalid option\n");
@@ -571,7 +581,13 @@ int main(int argc, char *argv[]) {
 
     FILE *input = fopen(binary, "rb");
 
-    while (exec_instruction(input));
+    if (cycles < 0) {
+        while (exec_instruction(input));
+    } else {
+        for (int i = 0; i < cycles; i++) {
+            exec_instruction(input);
+        }
+    }
 
     printf("Finished.\n");
     print_processor_state();
