@@ -410,6 +410,9 @@ int exec_instruction(FILE *in) {
             read_instruction(in, &second);
             printf("FIN\n");
             //TODO(inst)
+        } else {
+            printf("JIN\n");
+            jump_indirect(inst);
         }
     } else if (hi(inst) == 0x6) {
         printf("INC\n");
@@ -453,9 +456,6 @@ int exec_instruction(FILE *in) {
         read_instruction(in, &second);
         printf("JUN\n");
         jump_unconditional(inst, second);
-    } else if (hi(inst) == 0x3) {
-        printf("JIN\n");
-        jump_indirect(inst);
     } else if (hi(inst) == 0x1) {
         read_instruction(in, &second);
         printf("JCN\n");
