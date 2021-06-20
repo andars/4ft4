@@ -34,10 +34,15 @@ always @(posedge clock) begin
     end
 end
 
+integer i;
 initial begin
     $dumpfile("waves.vcd");
     $dumpvars;
     $dumpvars(0, dut.cpu.pc_stack.program_counters[0]);
+
+    for (i = 0; i < 16; i++) begin
+        $dumpvars(0, dut.cpu.datapath.registers[i]);
+    end
 
     reset = 1;
     repeat(2) @(posedge clock);

@@ -16,13 +16,28 @@ wire [11:0] pc;
 
 wire [2:0] cycle;
 
-reg [7:0] inst;
+wire clear_carry;
+wire clear_accumulator;
+wire write_accumulator;
+wire acc_input_sel;
+wire write_register;
+wire reg_input_sel;
+
+wire [3:0] inst_operand;
 
 cpu_control cpu_control(
     .clock(clock),
     .reset(reset),
+    .data(data),
     .sync(sync),
-    .cycle(cycle)
+    .cycle(cycle),
+    .inst_operand(inst_operand),
+    .clear_carry(clear_carry),
+    .clear_accumulator(clear_accumulator),
+    .write_accumulator(write_accumulator),
+    .acc_input_sel(acc_input_sel),
+    .write_register(write_register),
+    .reg_input_sel(reg_input_sel)
 );
 
 pc_stack pc_stack(
@@ -36,21 +51,19 @@ pc_stack pc_stack(
     .pc_word(pc_word)
 );
 
-assign data = pc_enable ? pc_word : 4'bz;
+datapath datapath(
+    .clock(clock),
+    .reset(reset),
+    .clear_carry(clear_carry),
+    .clear_accumulator(clear_accumulator),
+    .write_accumulator(write_accumulator),
+    .inst_operand(inst_operand),
+    .acc_input_sel(acc_input_sel),
+    .write_register(write_register),
+    .reg_input_sel(reg_input_sel)
+);
 
-// read data from ROM into an internal register
-// during subcycles 3 and 4
-always @(posedge clock) begin
-    if (reset) begin
-        inst <= 0;
-    end
-    else if (cycle == 3'h3) begin
-        inst[7:4] <= data;
-    end
-    else if (cycle == 3'h4) begin
-        inst[3:0] <= data;
-    end
-end
+assign data = pc_enable ? pc_word : 4'bz;
 
 // pulse ROM command line low in subcycle 2
 assign rom_cmd = ~(cycle == 3'h2);

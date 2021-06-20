@@ -1,7 +1,27 @@
 set signals [list]
+
 lappend signals "clock"
 lappend signals "sync"
 lappend signals "cycle_counter"
 lappend signals "data"
 lappend signals "reset"
+lappend signals "accumulator"
+lappend signals "carry"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[0\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[1\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[2\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[3\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[4\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[5\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[6\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[7\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[8\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[9\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[10\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[11\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[12\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[13\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[14\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.\\registers\[15\]\[3:0\]"
+
 set num_added [ gtkwave::addSignalsFromList $signals ]
