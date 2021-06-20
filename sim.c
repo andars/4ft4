@@ -169,8 +169,10 @@ void exec_acc_inst(uint8_t inst) {
         carry_out = 0x0;
     } else if (lo(inst) == 0x8) {
         printf("DAC\n");
+        uint8_t result = acc_in + lo(~0x1) + 0x1;
 
-        acc_out = (acc_in - 1) & 0xf;
+        acc_out = result & 0xf;
+        carry_out = (result >> 4) & 0x1;
     } else if (lo(inst) == 0x9) {
         printf("TCS\n");
 
