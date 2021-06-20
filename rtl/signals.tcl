@@ -25,3 +25,10 @@ lappend signals "tb_system.dut.cpu.datapath.\\registers\[14\]\[3:0\]"
 lappend signals "tb_system.dut.cpu.datapath.\\registers\[15\]\[3:0\]"
 
 set num_added [ gtkwave::addSignalsFromList $signals ]
+
+gtkwave::setBaselineMarker 30
+gtkwave::setMarker 190
+gtkwave::/View/Define_Time_Ruler_Marks
+gtkwave::/View/Show_Grid
+gtkwave::setBaselineMarker -1
+gtkwave::setMarker -1
