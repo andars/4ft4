@@ -4,12 +4,17 @@ module datapath(
     input clock,
     input reset,
     input clear_carry,
+    input write_carry,
     input clear_accumulator,
     input write_accumulator,
     input [3:0] inst_operand,
-    input [1:0] acc_input_sel,
+    input [2:0] acc_input_sel,
     input write_register,
-    input reg_input_sel
+    input reg_input_sel,
+    input [2:0] alu_op,
+    input [1:0] alu_in0_sel,
+    input [1:0] alu_in1_sel,
+    input [1:0] alu_cin_sel
 );
 
 `include "datapath.vh"
@@ -19,17 +24,33 @@ reg carry;
 
 reg [3:0] registers [15:0];
 
-wire [3:0] alu_result;
+wire [4:0] alu_result;
 
-assign alu_result = accumulator + registers[inst_operand];
+alu alu(
+    .regval(registers[inst_operand]),
+    .acc(accumulator),
+    .carry(carry),
+    .alu_op(alu_op),
+    .alu_in0_sel(alu_in0_sel),
+    .alu_in1_sel(alu_in1_sel),
+    .alu_cin_sel(alu_cin_sel),
+    .result(alu_result)
+);
 
 integer i;
 
 wire [3:0] acc_input;
 
-assign acc_input = (acc_input_sel == ACC_IN_FROM_REG) ? registers[inst_operand]
-                 : (acc_input_sel == ACC_IN_FROM_ALU) ? alu_result
-                 : inst_operand;
+assign acc_input = (acc_input_sel == ACC_IN_FROM_REG)    ? registers[inst_operand]
+                 : (acc_input_sel == ACC_IN_FROM_ALU)    ? alu_result[3:0]
+                 : (acc_input_sel == ACC_IN_FROM_IMM)    ? inst_operand
+                 : (acc_input_sel == ACC_IN_FROM_CARRY)  ? {3'b0, carry}
+                 : (acc_input_sel == ACC_IN_FROM_CARRY2) ? (carry ? 4'ha : 4'h9)
+                 : 4'bx;
+
+wire carry_input;
+
+assign carry_input = alu_result[4];
 
 always @(posedge clock) begin
     if (reset) begin
@@ -39,6 +60,9 @@ always @(posedge clock) begin
     else begin
         if (clear_carry) begin
             carry <= 0;
+        end
+        else if (write_carry) begin
+            carry <= carry_input;
         end
 
         if (clear_accumulator) begin
@@ -51,7 +75,8 @@ always @(posedge clock) begin
 end
 
 wire [3:0] reg_input;
-assign reg_input = (reg_input_sel == REG_IN_FROM_ACC) ? accumulator : 4'bx;
+assign reg_input = (reg_input_sel == REG_IN_FROM_ACC) ? accumulator
+                 : alu_result[3:0];
 
 always @(posedge clock) begin
     if (reset) begin

@@ -13,7 +13,7 @@ reg [2:0] cycle;
 reg [7:0] memory [255:0];
 
 initial begin
-    $readmemh("add.hex", memory);
+    $readmemh("rom.hex", memory);
 end
 
 always @(posedge clock) begin
