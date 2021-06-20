@@ -10,10 +10,12 @@ module cpu_control(
     output reg clear_carry,
     output reg clear_accumulator,
     output reg write_accumulator,
-    output reg acc_input_sel,
+    output reg [1:0] acc_input_sel,
     output reg write_register,
     output reg reg_input_sel
 );
+
+`include "datapath.vh"
 
 reg [7:0] inst;
 
@@ -55,20 +57,27 @@ always @(*) begin
     reg_input_sel = 0;
 
     case (inst[7:4])
+        4'h8: begin
+            // add register to accumulator
+            if (cycle == 3'h5) begin
+                acc_input_sel = ACC_IN_FROM_ALU;
+                write_accumulator = 1;
+            end
+        end
         4'hb: begin
             // swap values in register and accumulator
             if (cycle == 3'h5) begin
-                acc_input_sel = 1;
+                acc_input_sel = ACC_IN_FROM_REG;
                 write_accumulator = 1;
 
-                reg_input_sel = 0;
+                reg_input_sel = REG_IN_FROM_ACC;
                 write_register = 1;
             end
         end
         4'hd: begin
             // load immediate into accumulator
             if (cycle == 3'h5) begin
-                acc_input_sel = 0;
+                acc_input_sel = ACC_IN_FROM_IMM;
                 write_accumulator = 1;
             end
         end

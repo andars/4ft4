@@ -7,10 +7,12 @@ module datapath(
     input clear_accumulator,
     input write_accumulator,
     input [3:0] inst_operand,
-    input acc_input_sel,
+    input [1:0] acc_input_sel,
     input write_register,
     input reg_input_sel
 );
+
+`include "datapath.vh"
 
 reg [3:0] accumulator;
 reg carry;
@@ -19,12 +21,15 @@ reg [3:0] registers [15:0];
 
 wire [3:0] alu_result;
 
+assign alu_result = accumulator + registers[inst_operand];
+
 integer i;
 
 wire [3:0] acc_input;
 
-assign acc_input = (acc_input_sel ? registers[inst_operand]
-                                  : inst_operand);
+assign acc_input = (acc_input_sel == ACC_IN_FROM_REG) ? registers[inst_operand]
+                 : (acc_input_sel == ACC_IN_FROM_ALU) ? alu_result
+                 : inst_operand;
 
 always @(posedge clock) begin
     if (reset) begin
@@ -46,7 +51,7 @@ always @(posedge clock) begin
 end
 
 wire [3:0] reg_input;
-assign reg_input = (reg_input_sel ? 4'bx : accumulator);
+assign reg_input = (reg_input_sel == REG_IN_FROM_ACC) ? accumulator : 4'bx;
 
 always @(posedge clock) begin
     if (reset) begin

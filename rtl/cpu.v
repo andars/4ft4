@@ -19,7 +19,7 @@ wire [2:0] cycle;
 wire clear_carry;
 wire clear_accumulator;
 wire write_accumulator;
-wire acc_input_sel;
+wire [1:0] acc_input_sel;
 wire write_register;
 wire reg_input_sel;
 
