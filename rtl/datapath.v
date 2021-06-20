@@ -50,7 +50,7 @@ assign reg_input = (reg_input_sel ? 4'bx : accumulator);
 
 always @(posedge clock) begin
     if (reset) begin
-        for (i = 0; i < 4; i++) begin
+        for (i = 0; i < 16; i++) begin
            registers[i] <= 0;
         end
     end
