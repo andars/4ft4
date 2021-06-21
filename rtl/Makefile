@@ -13,10 +13,36 @@ waves: sim
 sim: lint
 	xxd -l256 -p -c1 $(ROM_BIN) > rom.hex
 	cat rom.hex
-	iverilog tb_system.sv $(SYSTEM_FILES)
+	iverilog -DNUM_CYCLES=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
 	./a.out
 
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)
 
+TEST_SOURCES := $(shell find ../tests -name '*.s' | grep -v -f skip.txt)
+$(info skipping $(shell find ../tests -name '*.s' | grep -f skip.txt))
+TEST_BINARIES := $(patsubst ../tests/%.s,../build/%.bin,$(TEST_SOURCES))
+TEST_RUNS := $(patsubst ../build/%.bin,testruns/%.log,$(TEST_BINARIES))
+TEST_HEX := $(patsubst testruns/%.log,testruns/%.hex,$(TEST_RUNS))
+$(info $(TEST_SOURCES))
+$(info "")
+$(info $(TEST_BINARIES))
+$(info "")
+$(info $(TEST_RUNS))
 
+$(TEST_HEX): testruns/%.hex: ../build/%.bin
+	@echo "Generating hex for $*"
+	mkdir -p $(@D)
+	xxd -l256 -p -c1 $(word 1,$^) > $@
+
+.PHONY: $(TEST_RUNS)
+$(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
+	mkdir -p $(@D)
+	iverilog -DNUM_CYCLES=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
+	cp $(word 3,$^) rom.hex
+	./a.out > $@
+	mv waves.vcd testruns/$*.vcd
+	bash ./check.sh $(word 2,$^) $@ #|| (cat $@; echo "test $(word 2,$^) failed: $@"; exit 1)
+
+.PHONY: test
+test: $(TEST_RUNS)

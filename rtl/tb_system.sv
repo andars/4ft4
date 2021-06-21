@@ -51,7 +51,17 @@ initial begin
     repeat(2) @(posedge clock);
     reset = 0;
 
-    repeat(512) @(posedge clock);
+    repeat(8 * `NUM_CYCLES) @(posedge clock);
+
+    $display("Finished.");
+    $display(" accumulator: 0x%0x", dut.cpu.datapath.accumulator);
+    for (i = 0; i < 8; i++) begin
+        $display(" register %2d: 0x%0x | register %2d: 0x%0x",
+                 2*i, dut.cpu.datapath.registers[2*i],
+                 2*i+1, dut.cpu.datapath.registers[2*i + 1]);
+    end
+    $display(" carry: %0d", dut.cpu.datapath.carry);
+    $display(" pc: 0x%0x", dut.cpu.pc_stack.program_counters[0]);
 
     $finish;
 end
