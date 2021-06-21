@@ -13,19 +13,25 @@ module cpu_control(
     output reg write_accumulator,
     output reg [2:0] acc_input_sel,
     output reg write_register,
-    output reg reg_input_sel,
+    output reg [1:0] reg_input_sel,
     output reg [2:0] alu_op,
     output reg [1:0] alu_in0_sel,
     output reg [1:0] alu_in1_sel,
-    output reg [1:0] alu_cin_sel
+    output reg [1:0] alu_cin_sel,
+    output reg [2:0] pc_write_enable
 );
 
 `include "datapath.vh"
 
 reg [7:0] inst;
 
+reg two_word;
+reg two_word_next;
+
+reg inst_operand_adj;
+
 // pass out the low 4b for use in the datapath
-assign inst_operand = inst[3:0];
+assign inst_operand = inst[3:0] ^ {3'b0, inst_operand_adj};
 
 always @(posedge clock) begin
     if (reset) begin
@@ -44,11 +50,13 @@ always @(posedge clock) begin
     if (reset) begin
         inst <= 0;
     end
-    else if (cycle == 3'h3) begin
-        inst[7:4] <= data;
-    end
-    else if (cycle == 3'h4) begin
-        inst[3:0] <= data;
+    else if (!two_word) begin
+        if (cycle == 3'h3) begin
+            inst[7:4] <= data;
+        end
+        else if (cycle == 3'h4) begin
+            inst[3:0] <= data;
+        end
     end
 end
 
@@ -67,7 +75,68 @@ always @(*) begin
     alu_in1_sel = 0;
     alu_cin_sel = 0;
 
+    pc_write_enable = 0;
+
+    two_word_next = two_word;
+
+    inst_operand_adj = 0;
+
+    if (two_word) begin
+        // control signals for the second system cycle
+        // of two word instructions
+
+        if (cycle == 3'h5) begin
+            // reset the two word bit at the end of this
+            // system cycle
+            two_word_next = 0;
+        end
+
+        case (inst[7:4])
+            4'h2: begin
+                if (cycle == 3'h3) begin
+                    reg_input_sel = REG_IN_FROM_DATA;
+                    write_register = 1;
+                end
+
+                if (cycle == 3'h4) begin
+                    // switch to the second register in the pair
+                    inst_operand_adj = 1'b1;
+
+                    reg_input_sel = REG_IN_FROM_DATA;
+                    write_register = 1;
+                end
+            end
+            default: begin end
+        endcase
+    end
+    else begin
     case (inst[7:4])
+        4'h2: begin
+            if (cycle == 3'h5) begin
+                two_word_next = 1;
+            end
+        end
+        4'h3: begin
+            if (inst[0]) begin
+                // indirect jump
+                if (cycle == 3'h5) begin
+                    pc_write_enable = 3'b001;
+                end
+                else if (cycle == 3'h6) begin
+                    inst_operand_adj = 1'b1;
+                    pc_write_enable = 3'b010;
+                end
+            end
+            else begin
+                // indirect fetch
+
+                // TODO:
+                // - this is a two cycle instruction
+                // - PC unit needs to be disabled for the second cycle
+                // - register {0,1} is sent to ROM instead of PC, and
+                //   loaded into destination registers
+            end
+        end
         4'h6: begin
             // increment the specified register
             if (cycle == 3'h5) begin
@@ -273,6 +342,15 @@ always @(*) begin
         end
         default: begin end
     endcase
+    end
 end
 
+always @(posedge clock) begin
+    if (reset) begin
+        two_word <= 0;
+    end
+    else begin
+        two_word <= two_word_next;
+    end
+end
 endmodule

@@ -1,8 +1,9 @@
 //`ifndef _DATAPATH_VH
 //`define _DATAPATH_VH
 
-localparam REG_IN_FROM_ACC = 1'b0;
-localparam REG_IN_FROM_ALU = 1'b1;
+localparam REG_IN_FROM_ACC  = 2'b00;
+localparam REG_IN_FROM_ALU  = 2'b01;
+localparam REG_IN_FROM_DATA = 2'b10;
 
 localparam ACC_IN_FROM_IMM    = 3'b000;
 localparam ACC_IN_FROM_REG    = 3'b001;

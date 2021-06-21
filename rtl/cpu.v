@@ -13,6 +13,7 @@ module cpu(
 wire pc_enable;
 wire [3:0] pc_word;
 wire [11:0] pc;
+wire [2:0] pc_write_enable;
 
 wire [2:0] cycle;
 
@@ -22,11 +23,12 @@ wire clear_accumulator;
 wire write_accumulator;
 wire [2:0] acc_input_sel;
 wire write_register;
-wire reg_input_sel;
+wire [1:0] reg_input_sel;
 wire [2:0] alu_op;
 wire [1:0] alu_in0_sel;
 wire [1:0] alu_in1_sel;
 wire [1:0] alu_cin_sel;
+wire [3:0] regval;
 
 wire [3:0] inst_operand;
 
@@ -47,7 +49,8 @@ cpu_control cpu_control(
     .alu_op(alu_op),
     .alu_in0_sel(alu_in0_sel),
     .alu_in1_sel(alu_in1_sel),
-    .alu_cin_sel(alu_cin_sel)
+    .alu_cin_sel(alu_cin_sel),
+    .pc_write_enable(pc_write_enable)
 );
 
 pc_stack pc_stack(
@@ -55,6 +58,8 @@ pc_stack pc_stack(
     .reset(reset),
     .control(2'b0),
     .target(12'b0),
+    .regval(regval),
+    .pc_write_enable(pc_write_enable),
     .cycle(cycle),
     .pc(pc),
     .pc_enable(pc_enable),
@@ -64,6 +69,7 @@ pc_stack pc_stack(
 datapath datapath(
     .clock(clock),
     .reset(reset),
+    .data(data),
     .clear_carry(clear_carry),
     .write_carry(write_carry),
     .clear_accumulator(clear_accumulator),
@@ -75,7 +81,8 @@ datapath datapath(
     .alu_op(alu_op),
     .alu_in0_sel(alu_in0_sel),
     .alu_in1_sel(alu_in1_sel),
-    .alu_cin_sel(alu_cin_sel)
+    .alu_cin_sel(alu_cin_sel),
+    .regval(regval)
 );
 
 assign data = pc_enable ? pc_word : 4'bz;

@@ -5,6 +5,8 @@ module pc_stack(
     input reset,
     input [1:0] control,
     input [11:0] target,
+    input [3:0] regval,
+    input [2:0] pc_write_enable,
     output [11:0] pc,
     input [2:0] cycle, 
     output reg pc_enable,
@@ -16,6 +18,9 @@ reg [1:0] index;
 reg carry;
 
 integer i;
+
+wire [3:0] pc_next;
+assign pc_next = regval;
 
 always @(posedge clock) begin
     if (reset) begin
@@ -33,7 +38,19 @@ always @(posedge clock) begin
     end
     else if (cycle == 3'h2) begin
         program_counters[index][11:8] <= program_counters[index][11:8] + {3'b0, carry};
-    end else begin
+    end
+    else if (pc_write_enable != 3'b0) begin
+        if (pc_write_enable[0]) begin
+            program_counters[index][3:0] <= pc_next;
+        end
+        else if (pc_write_enable[1]) begin
+            program_counters[index][7:4] <= pc_next;
+        end
+        else begin
+            program_counters[index][11:8] <= pc_next;
+        end
+    end
+    else begin
         // store the target in the current slot
         if (0) begin
             program_counters[index] <= target;

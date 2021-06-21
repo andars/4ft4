@@ -3,6 +3,7 @@
 module datapath(
     input clock,
     input reset,
+    input [3:0] data,
     input clear_carry,
     input write_carry,
     input clear_accumulator,
@@ -10,11 +11,12 @@ module datapath(
     input [3:0] inst_operand,
     input [2:0] acc_input_sel,
     input write_register,
-    input reg_input_sel,
+    input [1:0] reg_input_sel,
     input [2:0] alu_op,
     input [1:0] alu_in0_sel,
     input [1:0] alu_in1_sel,
-    input [1:0] alu_cin_sel
+    input [1:0] alu_cin_sel,
+    output [3:0] regval
 );
 
 `include "datapath.vh"
@@ -24,10 +26,12 @@ reg carry;
 
 reg [3:0] registers [15:0];
 
+assign regval = registers[inst_operand];
+
 wire [4:0] alu_result;
 
 alu alu(
-    .regval(registers[inst_operand]),
+    .regval(regval),
     .acc(accumulator),
     .carry(carry),
     .alu_op(alu_op),
@@ -41,7 +45,7 @@ integer i;
 
 wire [3:0] acc_input;
 
-assign acc_input = (acc_input_sel == ACC_IN_FROM_REG)    ? registers[inst_operand]
+assign acc_input = (acc_input_sel == ACC_IN_FROM_REG)    ? regval
                  : (acc_input_sel == ACC_IN_FROM_ALU)    ? alu_result[3:0]
                  : (acc_input_sel == ACC_IN_FROM_IMM)    ? inst_operand
                  : (acc_input_sel == ACC_IN_FROM_CARRY)  ? {3'b0, carry}
@@ -76,7 +80,9 @@ end
 
 wire [3:0] reg_input;
 assign reg_input = (reg_input_sel == REG_IN_FROM_ACC) ? accumulator
-                 : alu_result[3:0];
+                 : (reg_input_sel == REG_IN_FROM_ALU) ? alu_result[3:0]
+                 : (reg_input_sel == REG_IN_FROM_DATA) ? data
+                 : 4'bx;
 
 always @(posedge clock) begin
     if (reset) begin
