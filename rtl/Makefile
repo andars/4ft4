@@ -24,6 +24,7 @@ $(info skipping $(shell find ../tests -name '*.s' | grep -f skip.txt))
 TEST_BINARIES := $(patsubst ../tests/%.s,../build/%.bin,$(TEST_SOURCES))
 TEST_RUNS := $(patsubst ../build/%.bin,testruns/%.log,$(TEST_BINARIES))
 TEST_HEX := $(patsubst testruns/%.log,testruns/%.hex,$(TEST_RUNS))
+TEST_WAVES := $(patsubst testruns/%.log,testruns/%.waves,$(TEST_RUNS))
 $(info $(TEST_SOURCES))
 $(info "")
 $(info $(TEST_BINARIES))
@@ -35,6 +36,8 @@ $(TEST_HEX): testruns/%.hex: ../build/%.bin
 	mkdir -p $(@D)
 	xxd -l256 -p -c1 $(word 1,$^) > $@
 
+$(TEST_RUNS): lint
+
 .PHONY: $(TEST_RUNS)
 $(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
 	mkdir -p $(@D)
@@ -43,6 +46,10 @@ $(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
 	./a.out > $@
 	mv waves.vcd testruns/$*.vcd
 	bash ./check.sh $(word 2,$^) $@ #|| (cat $@; echo "test $(word 2,$^) failed: $@"; exit 1)
+
+.PHONY: $(TEST_WAVES)
+$(TEST_WAVES): testruns/%.waves: |testruns/%.log
+	gtkwave testruns/$*.vcd -S signals.tcl #--rcvar 'do_initial_zoom_fit yes'
 
 .PHONY: test
 test: $(TEST_RUNS)
