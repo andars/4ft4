@@ -13,10 +13,6 @@ uint8_t lo(uint8_t in) {
     return (in & 0xf);
 }
 
-void exec_fin() {
-
-}
-
 int randomize_state = 0;
 int print_ram = 0;
 
