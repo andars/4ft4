@@ -18,6 +18,7 @@ void exec_fin() {
 }
 
 int randomize_state = 0;
+int print_ram = 0;
 
 #define NUM_REGS_PER_RAM 4
 #define RAM_REG_WIDTH 16 // each RAM reg is 16 4-bit characters
@@ -65,6 +66,18 @@ void print_processor_state() {
     }
     printf(" carry: %d\n", state.carry);
     printf(" pc: 0x%x\n", state.pc);
+    if (print_ram) {
+        for (int ram = 0; ram < NUM_RAMS; ram++) {
+            for (int reg = 0; reg < NUM_REGS_PER_RAM; reg++) {
+                printf(" ram %d reg %d: ", ram, reg);
+                for (int c = 0; c < RAM_REG_WIDTH; c++) {
+                    printf("%x ", lo(state.ram[c + reg * RAM_REG_WIDTH + ram * RAM_SIZE]));
+                }
+                printf("\n");
+            }
+            printf("\n");
+        }
+    }
     printf("---\n");
 }
 
@@ -545,7 +558,7 @@ int main(int argc, char *argv[]) {
     int opt;
     int cycles = -1;
 
-    while ((opt = getopt(argc, argv, "rc:")) != -1) {
+    while ((opt = getopt(argc, argv, "rc:m")) != -1) {
         switch (opt) {
         case 'r':
             randomize_state = 1;
@@ -557,6 +570,9 @@ int main(int argc, char *argv[]) {
                 print_usage();
                 return 1;
             }
+            break;
+        case 'm':
+            print_ram = 1;
             break;
         default:
             printf("invalid option\n");

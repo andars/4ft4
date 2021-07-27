@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -e
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 CLEAR='\033[0m'
@@ -27,6 +29,9 @@ while read -r cmd args; do
         sim_args="$sim_args -c $args"
     fi
 
+    if [ $cmd = '!ram' ]; then
+        sim_args="$sim_args -m"
+    fi
 done < <(grep '!' $source)
 
 echo "sim_args $sim_args"
