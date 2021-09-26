@@ -79,6 +79,8 @@ def desc_to_bin(desc, values={}):
     inst_base = list(desc[0])
     fw_str = desc[0]
 
+    relocs = []
+
     # strip operand fields from instruction
     # and determine operand ids referenced
     # in the first word (in fw_args)
@@ -129,10 +131,15 @@ def desc_to_bin(desc, values={}):
         #TODO: no default values
         #value = values[a]
         value = values.get(a, 0)
-        part = ((value >> shift) << base) & mask
-        print("part {:08b}".format(part))
 
-        inst = inst | part
+        if isinstance(value, tuple) and (value[0] == 'UNKNOWN_LABEL'):
+            sym_name = value[1]
+            relocs.append([sym_name, 0, mask, base, shift])
+        else:
+            part = ((value >> shift) << base) & mask
+            print("part {:08b}".format(part))
+
+            inst = inst | part
 
     if len(desc) > 3:
         inst_sw = 0
@@ -145,17 +152,26 @@ def desc_to_bin(desc, values={}):
             #TODO: no default values
             #values = values[a]
             value = values.get(a, 0)
-            part = (value << base) & mask
-            print("part {:08b}".format(part))
 
-            inst_sw = inst_sw | part
+            if isinstance(value, tuple) and (value[0] == 'UNKNOWN_LABEL'):
+                sym_name = value[1]
+                relocs.append([sym_name, 1, mask, base, 0])
+            else:
+                part = (value << base) & mask
+                print("part {:08b}".format(part))
+
+                inst_sw = inst_sw | part
 
 
         print("inst: {:02x} {:02x} - {:08b} {:08b}".format(inst, inst_sw, inst, inst_sw))
-        return inst, inst_sw
+        if len(relocs) > 0:
+            print("(pending relocations)")
+        return (inst, inst_sw), relocs
     else: 
         print("inst: {:02x} - {:08b}".format(inst, inst))
-        return inst,
+        if len(relocs) > 0:
+            print("(pending relocations)")
+        return (inst,), relocs
 
 def get_desc_and_operands(inst):
     op = inst[0]
@@ -193,8 +209,12 @@ def parse_value(f):
         v = labels[f]
         print("label -> ", v)
     else:
-        v = int(f)
-        print("int -> ", v)
+        try:
+            v = int(f)
+            print("int -> ", v)
+        except ValueError:
+            print(f, " is not an int. interpreting it as a label.")
+            v = ('UNKNOWN_LABEL', f)
     return v
 
 def assemble_line(line, loc=0):
@@ -202,16 +222,18 @@ def assemble_line(line, loc=0):
     line = line.strip()
     inst_start = 0
     inst_end = len(line)
-    if ',' in line:
-        label_end = line.index(',')
-        label = line[:label_end]
-        inst_start = label_end + 1
-        print("label ", label)
-        labels[label] = loc
+
     if '/' in line:
         inst_end = line.index('/')
         comment = line[inst_end:]
         print("comment ", comment)
+
+    if ',' in line[:inst_end]:
+        label_end = line[:inst_end].index(',')
+        label = line[:label_end]
+        inst_start = label_end + 1
+        print("label ", label)
+        labels[label] = loc
 
     inst = line[inst_start:inst_end].strip()
     print("instruction ", inst)
@@ -227,14 +249,14 @@ def assemble_line(line, loc=0):
             # constant data
             assert len(operands) == 0
             words = (parse_value(opcode),)
+            relocs = []
         else:
-            words = inst_to_bin([opcode] + operands)
+            words, relocs = inst_to_bin([opcode] + operands)
         print(['{:02x}'.format(s) for s in words])
-        return words
+        return words, relocs
     else:
         print("no opcode")
-        return ()
-
+        return (), []
 
 def find_instruction(op):
     for inst in instructions:
@@ -259,14 +281,14 @@ for desc in instructions:
     print()
 
 print("test")
-assert desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 255}) == (0x20, 0xff)
-assert inst_to_bin(['FIM', 0, 255]) == (0x20, 0xff)
-assert inst_to_bin(['JUN', 0x3e0]) == (0x43, 0xe0)
-assert inst_to_bin(['ADD', 1]) == (0x81,)
-assert inst_to_bin(['LDM', 3]) == (0xd3,)
-assert inst_to_bin(['JUN', 0x362]) == (0x43, 0x62)
-assert inst_to_bin(['FIM', 0, 4]) == (0x20, 0x04)
-assert inst_to_bin(['JCN', 6, 0x302]) == (0x16, 0x02)
+assert desc_to_bin(find_instruction('FIM'), {'P': 0, 'D': 255}) == ((0x20, 0xff), [])
+assert inst_to_bin(['FIM', 0, 255]) == ((0x20, 0xff), [])
+assert inst_to_bin(['JUN', 0x3e0]) == ((0x43, 0xe0), [])
+assert inst_to_bin(['ADD', 1]) == ((0x81,), [])
+assert inst_to_bin(['LDM', 3]) == ((0xd3,), [])
+assert inst_to_bin(['JUN', 0x362]) == ((0x43, 0x62), [])
+assert inst_to_bin(['FIM', 0, 4]) == ((0x20, 0x04), [])
+assert inst_to_bin(['JCN', 6, 0x302]) == ((0x16, 0x02), [])
 print("passed")
 
 assemble_line('FOO, JCN 6 0x302 / comment')
@@ -284,16 +306,46 @@ if len(sys.argv) > 1:
     out = []
     loc = 0
     labels = {}
+    relocs = []
     print("assembling ", sys.argv[1])
     with open(sys.argv[1], 'r') as f_in:
         for line in f_in.readlines():
             print(line.strip())
-            words = assemble_line(line, loc)
+            words, line_relocs = assemble_line(line, loc)
+
+            if len(line_relocs) > 0:
+                print("reading {} relocs at {}".format(len(line_relocs), loc))
+            for r in line_relocs:
+                print(r)
+                r[1] += loc
+                print(r)
+                relocs.append(r)
+
             for w in words:
                 out.append(w)
                 loc += 1
 
     print(labels)
+    for i in range(len(out)):
+        w = out[i]
+        print("{:04x}: {:02x}".format(i, w))
+    print()
+
+    if len(relocs) > 0:
+        print('processing relocations for forward references')
+        for r in relocs:
+            symname, loc, mask, base, shift = r
+
+            if symname in labels:
+                value = labels[symname]
+            else:
+                print("symbol {} used in forward reference but not defined".format(symname))
+                assert False
+
+            word = out[loc]
+            part = ((value >> shift) << base) & mask
+            out[loc] = word | part
+
     for i in range(len(out)):
         w = out[i]
         print("{:04x}: {:02x}".format(i, w))
