@@ -397,14 +397,15 @@ int read_instruction(FILE *in, uint8_t *inst) {
 
     count = fread(inst, 1, 1, in);
 
-    state.pc++;
+    if (count != 0) {
+        state.pc++;
+    }
 
     return count;
 }
 
 int exec_instruction(FILE *in) {
     uint8_t inst, second;
-    size_t loc = ftell(in);
     size_t count;
 
     fseek(in, state.pc, SEEK_SET);
@@ -415,6 +416,7 @@ int exec_instruction(FILE *in) {
         return 0;
     }
 
+    size_t loc = ftell(in) - 1;
     printf("+0x%lx: 0x%x %d\n", loc, inst, inst);
 
     if (hi(inst) == 0x3) {
