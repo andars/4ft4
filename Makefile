@@ -5,11 +5,11 @@ TEST_BINARIES := $(patsubst tests/%.s,build/%.bin,$(TEST_SOURCES))
 TEST_LOGS := $(patsubst %.bin,%.log,$(TEST_BINARIES))
 
 sim: build/sim.o
-	$(CC) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
 build/%.o: %.c
 	mkdir -p build
-	$(CC) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(TEST_BINARIES): build/%.bin: tests/%.s
 	mkdir -p $(@D)
