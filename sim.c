@@ -22,6 +22,7 @@ int print_ram = 0;
 #define RAM_SIZE (NUM_REGS_PER_RAM * RAM_REG_WIDTH)
 #define NUM_RAMS 4
 #define NUM_ROMS 2
+#define STACK_SIZE 3
 
 typedef struct {
     uint16_t pc;
@@ -38,6 +39,9 @@ typedef struct {
     uint8_t rom_ports[NUM_ROMS];
 
     uint8_t test_signal;
+
+    uint16_t stack[STACK_SIZE];
+    uint8_t stack_pointer;
 } ProcessorState;
 
 ProcessorState state;
@@ -59,6 +63,10 @@ void print_processor_state() {
         printf(" |");
         printf(" register %2d: 0x%x", i + 1, state.registers[i + 1]);
         printf(" - %dP : 0x%02x\n", i/2, (state.registers[i] << 4) | state.registers[i+1]);
+    }
+    printf(" stack pointer: 0x%x\n", state.stack_pointer);
+    for (int i = 0; i < STACK_SIZE; i++) {
+        printf(" stack %d: 0x%x\n", i, state.stack[i]);
     }
     printf(" carry: %d\n", state.carry);
     printf(" pc: 0x%x\n", state.pc);
@@ -90,6 +98,16 @@ void init_ram() {
     state.ram[0] = 1;
 
     state.ram[16] = 3;
+}
+
+void push_stack(uint16_t addr) {
+    state.stack[state.stack_pointer] = addr;
+    state.stack_pointer = (state.stack_pointer + 1) % STACK_SIZE;
+}
+
+uint16_t pop_stack() {
+    state.stack_pointer = (state.stack_pointer + STACK_SIZE - 1) % STACK_SIZE;
+    return state.stack[state.stack_pointer];
 }
 
 void exec_alu_inst(uint8_t inst, AluOp op) {
@@ -310,6 +328,20 @@ void increment_and_jump_if_zero(uint8_t inst, uint8_t target) {
     }
 }
 
+void call(uint8_t inst, uint8_t second) {
+    uint16_t target = (((uint16_t)lo(inst)) << 8) | second;
+
+    push_stack(state.pc);
+    jump_12(target);
+}
+
+void load_and_ret(uint8_t inst) {
+    load_accumulator(inst);
+
+    uint16_t ret_addr = pop_stack();
+    jump_12(ret_addr);
+}
+
 void set_address(uint8_t inst) {
     uint8_t reg = lo(inst) & ~0x1;
     printf("reg %d\n", reg);
@@ -505,10 +537,10 @@ int exec_instruction(FILE *in) {
     } else if (hi(inst) == 0x5) {
         read_instruction(in, &second);
         printf("JMS\n");
-        //TODO(inst)
+        call(inst, second);
     } else if (hi(inst) == 0xc) {
         printf("BBL\n");
-        //TODO(inst)
+        load_and_ret(inst);
     } else if (hi(inst) == 0x0) {
         if (lo(inst) == 0x0) {
             printf("NOP\n");
