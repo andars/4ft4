@@ -390,6 +390,31 @@ void read_rom_port(void) {
     state.accumulator = state.rom_ports[selected_rom];
 }
 
+uint8_t read_rom(FILE *in, uint16_t addr) {
+    size_t count;
+    uint8_t data = 0;
+
+    fseek(in, addr, SEEK_SET);
+    count = fread(&data, 1, 1, in);
+    if (count == 0) {
+        printf("failed to read rom at %d, returning 0\n", addr);
+    }
+
+    return data;
+}
+
+void fetch_indirect(FILE *in, uint8_t inst) {
+    uint8_t reg = lo(inst);
+
+    uint8_t src_addr_8 = (state.registers[0] << 4) | state.registers[1];
+    uint16_t src_addr_12 = (state.pc & ~0xff) | src_addr_8;
+
+    uint8_t data = read_rom(in, src_addr_12);
+
+    state.registers[reg] = hi(data);
+    state.registers[reg+1] = lo(data);
+}
+
 int read_instruction(FILE *in, uint8_t *inst) {
     size_t count;
 
@@ -421,9 +446,8 @@ int exec_instruction(FILE *in) {
 
     if (hi(inst) == 0x3) {
         if ((inst & 0x1) == 0) {
-            read_instruction(in, &second);
             printf("FIN\n");
-            //TODO(inst)
+            fetch_indirect(in, inst);
         } else {
             printf("JIN\n");
             jump_indirect(inst);
