@@ -176,6 +176,7 @@ def desc_to_bin(desc, values={}):
 def get_desc_and_operands(inst):
     op = inst[0]
     desc = find_instruction(op)
+    assert desc is not None, 'unknown instruction ' + op
 
     operand_count = len(inst) - 1
     expected = len(desc[2]) if len(desc) >= 3 else 0
