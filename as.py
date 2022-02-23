@@ -236,6 +236,22 @@ def assemble_line(line, loc=0):
         print("label ", label)
         labels[label] = loc
 
+    if '=' in line[:inst_end]:
+        sym_end = line[:inst_end].index('=')
+        sym = line[:sym_end].strip()
+        value = int(line[sym_end+1:])
+        if sym == '':
+            new_loc = value
+            delta = new_loc - loc
+            assert delta >= 0, "origin can only move forward"
+
+            words = (0,) * delta
+            return words, []
+        else:
+            print('symbol {} = {}'.format(sym, value))
+            labels[sym] = value
+            return (), []
+
     inst = line[inst_start:inst_end].strip()
     print("instruction ", inst)
 
