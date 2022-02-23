@@ -11,7 +11,7 @@ build/%.o: %.c
 	mkdir -p build
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(TEST_BINARIES): build/%.bin: tests/%.s
+$(TEST_BINARIES): build/%.bin: tests/%.s as.py
 	mkdir -p $(@D)
 	bash -c "./as.py <(grep -v -e '^!' $<) $@ > $@.build.log"
 
