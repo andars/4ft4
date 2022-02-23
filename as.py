@@ -179,7 +179,7 @@ def get_desc_and_operands(inst):
 
     operand_count = len(inst) - 1
     expected = len(desc[2]) if len(desc) >= 3 else 0
-    assert operand_count == expected
+    assert operand_count == expected, inst
 
     operand_map = {}
 
