@@ -278,7 +278,7 @@ void jump_unconditional(uint8_t inst, uint8_t second) {
 }
 
 void jump_8(uint8_t target) {
-    uint8_t target_12 = (state.pc & ~0xff) | target;
+    uint16_t target_12 = (state.pc & ~0xff) | target;
     jump_12(target_12);
 }
 
