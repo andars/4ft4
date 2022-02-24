@@ -93,6 +93,7 @@ always @(*) begin
 
         case (inst[7:4])
             4'h2: begin
+                // FIM
                 if (cycle == 3'h3) begin
                     reg_input_sel = REG_IN_FROM_DATA;
                     write_register = 1;
@@ -112,13 +113,14 @@ always @(*) begin
     else begin
     case (inst[7:4])
         4'h2: begin
+            // FIM: fetch immediate
             if (cycle == 3'h5) begin
                 two_word_next = 1;
             end
         end
         4'h3: begin
             if (inst[0]) begin
-                // indirect jump
+                // JIN: indirect jump
                 if (cycle == 3'h5) begin
                     pc_write_enable = 3'b001;
                 end
@@ -128,7 +130,7 @@ always @(*) begin
                 end
             end
             else begin
-                // indirect fetch
+                // FIN: indirect fetch
 
                 // TODO:
                 // - this is a two cycle instruction
@@ -138,7 +140,7 @@ always @(*) begin
             end
         end
         4'h6: begin
-            // increment the specified register
+            // INC: increment the specified register
             if (cycle == 3'h5) begin
                 alu_in0_sel = ALU_IN0_REG;
                 alu_in1_sel = ALU_IN1_ONE;
@@ -151,7 +153,7 @@ always @(*) begin
             end
         end
         4'h8: begin
-            // add register to accumulator
+            // ADD: add register to accumulator
             if (cycle == 3'h5) begin
                 alu_in0_sel = ALU_IN0_REG;
                 alu_in1_sel = ALU_IN1_ACC;
@@ -164,7 +166,7 @@ always @(*) begin
             end
         end
         4'h9: begin
-            // subtract register from accumulator
+            // SUB: subtract register from accumulator
             if (cycle == 3'h5) begin
                 alu_in0_sel = ALU_IN0_REG_INV;
                 alu_in1_sel = ALU_IN1_ACC;
@@ -204,20 +206,20 @@ always @(*) begin
         4'hf: begin
             case (inst[3:0])
             4'h0: begin
-                // clear the accumulator and carry
+                // CLB: clear the accumulator and carry
                 if (cycle == 3'h5) begin
                     clear_accumulator = 1;
                     clear_carry = 1;
                 end
             end
             4'h1: begin
-                // clear carry
+                // CLC: clear carry
                 if (cycle == 3'h5) begin
                     clear_carry = 1;
                 end
             end
             4'h2: begin
-                // increment the accumulator
+                // IAC: increment the accumulator
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     alu_in1_sel = ALU_IN1_ONE;
@@ -230,7 +232,7 @@ always @(*) begin
                 end
             end
             4'h3: begin
-                // invert the carry
+                // CMC: invert the carry
                 if (cycle == 3'h5) begin
                     alu_cin_sel = ALU_CIN_CARRY_INV;
                     alu_op = ALU_OP_PASS;
@@ -239,7 +241,7 @@ always @(*) begin
                 end
             end
             4'h4: begin
-                // invert the accumulator
+                // CMA: invert the accumulator
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC_INV;
                     alu_op = ALU_OP_PASS;
@@ -249,7 +251,7 @@ always @(*) begin
                 end
             end
             4'h5: begin
-                // rotate accumulator & carry left
+                // RAL: rotate accumulator & carry left
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     alu_cin_sel = ALU_CIN_CARRY;
@@ -262,7 +264,7 @@ always @(*) begin
                 end
             end
             4'h6: begin
-                // rotate accumulator & carry right
+                // RAR: rotate accumulator & carry right
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     alu_cin_sel = ALU_CIN_CARRY;
@@ -274,7 +276,7 @@ always @(*) begin
                 end
             end
             4'h7: begin
-                // copy carry into accumulator and reset carry
+                // TCC: copy carry into accumulator and reset carry
                 if (cycle == 3'h5) begin
                     acc_input_sel = ACC_IN_FROM_CARRY;
                     write_accumulator = 1;
@@ -282,7 +284,7 @@ always @(*) begin
                 end
             end
             4'h8: begin
-                // decrement accumulator
+                // DAC: decrement accumulator
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     // TODO: use IN1_F and CIN_ZERO?
@@ -297,7 +299,7 @@ always @(*) begin
                 end
             end
             4'h9: begin
-                // copy carry to accumulator for decimal subtraction
+                // TCS: copy carry to accumulator for decimal subtraction
                 // and reset carry
                 if (cycle == 3'h5) begin
                     acc_input_sel = ACC_IN_FROM_CARRY2;
@@ -306,7 +308,7 @@ always @(*) begin
                 end
             end
             4'ha: begin
-                // set carry
+                // STC: set carry
                 if (cycle == 3'h5) begin
                     // alternative to ALU_CIN_ONE:
                     // ROL with in1[3] = 1
@@ -317,7 +319,7 @@ always @(*) begin
                 end
             end
             4'hb: begin
-                // transform accumulator for decimal addition
+                // DAA: transform accumulator for decimal addition
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     alu_cin_sel = ALU_CIN_CARRY;
@@ -329,6 +331,7 @@ always @(*) begin
                 end
             end
             4'hc: begin
+                // KBP
                 if (cycle == 3'h5) begin
                     alu_in0_sel = ALU_IN0_ACC;
                     alu_op = ALU_OP_LG2_1;
