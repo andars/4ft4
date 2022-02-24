@@ -18,10 +18,12 @@ module cpu_control(
     output reg [1:0] alu_in0_sel,
     output reg [1:0] alu_in1_sel,
     output reg [1:0] alu_cin_sel,
+    output reg [1:0] pc_next_sel,
     output reg [2:0] pc_write_enable
 );
 
 `include "datapath.vh"
+`include "pc_stack.vh"
 
 reg [7:0] inst;
 
@@ -95,16 +97,37 @@ always @(*) begin
             4'h2: begin
                 // FIM
                 if (cycle == 3'h3) begin
+                    // write the high 4b of data into the first register in the
+                    // pair (inst[3:0])
                     reg_input_sel = REG_IN_FROM_DATA;
                     write_register = 1;
                 end
 
                 if (cycle == 3'h4) begin
                     // switch to the second register in the pair
+                    // and write the low 4b of data
                     inst_operand_adj = 1'b1;
 
                     reg_input_sel = REG_IN_FROM_DATA;
                     write_register = 1;
+                end
+            end
+            4'h4: begin
+                // JUN
+                if (cycle == 3'h3) begin
+                    // write the high 4b of data into pc[7:4]
+                    pc_write_enable = 3'b010;
+                    pc_next_sel = PC_FROM_DATA;
+                end
+                if (cycle == 3'h4) begin
+                    // write the low 4b of data into pc[3:0]
+                    pc_write_enable = 3'b001;
+                    pc_next_sel = PC_FROM_DATA;
+                end
+                if (cycle == 3'h5) begin
+                    // write inst_operand into pc[11:8]
+                    pc_write_enable = 3'b100;
+                    pc_next_sel = PC_FROM_INST;
                 end
             end
             default: begin end
@@ -122,11 +145,17 @@ always @(*) begin
             if (inst[0]) begin
                 // JIN: indirect jump
                 if (cycle == 3'h5) begin
+                    // write the 2nd register in the pair into
+                    // low 4b of the PC
                     pc_write_enable = 3'b001;
+                    pc_next_sel = PC_FROM_REG;
                 end
                 else if (cycle == 3'h6) begin
+                    // switch to the 1st register in the pair
+                    // and write into the high 4b of the PC
                     inst_operand_adj = 1'b1;
                     pc_write_enable = 3'b010;
+                    pc_next_sel = PC_FROM_REG;
                 end
             end
             else begin
@@ -137,6 +166,12 @@ always @(*) begin
                 // - PC unit needs to be disabled for the second cycle
                 // - register {0,1} is sent to ROM instead of PC, and
                 //   loaded into destination registers
+            end
+        end
+        4'h4: begin
+            // JUN
+            if (cycle == 3'h5) begin
+                two_word_next = 1;
             end
         end
         4'h6: begin

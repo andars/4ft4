@@ -14,6 +14,7 @@ wire pc_enable;
 wire [3:0] pc_word;
 wire [11:0] pc;
 wire [2:0] pc_write_enable;
+wire [1:0] pc_next_sel;
 
 wire [2:0] cycle;
 
@@ -50,6 +51,7 @@ cpu_control cpu_control(
     .alu_in0_sel(alu_in0_sel),
     .alu_in1_sel(alu_in1_sel),
     .alu_cin_sel(alu_cin_sel),
+    .pc_next_sel(pc_next_sel),
     .pc_write_enable(pc_write_enable)
 );
 
@@ -59,6 +61,9 @@ pc_stack pc_stack(
     .control(2'b0),
     .target(12'b0),
     .regval(regval),
+    .data(data),
+    .inst_operand(inst_operand),
+    .pc_next_sel(pc_next_sel),
     .pc_write_enable(pc_write_enable),
     .cycle(cycle),
     .pc(pc),

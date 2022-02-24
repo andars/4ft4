@@ -6,12 +6,17 @@ module pc_stack(
     input [1:0] control,
     input [11:0] target,
     input [3:0] regval,
+    input [3:0] data,
+    input [3:0] inst_operand,
+    input [1:0] pc_next_sel,
     input [2:0] pc_write_enable,
     output [11:0] pc,
     input [2:0] cycle, 
     output reg pc_enable,
     output reg [3:0] pc_word
 );
+
+`include "pc_stack.vh"
 
 reg [11:0] program_counters[3:0];
 reg [1:0] index;
@@ -20,7 +25,10 @@ reg carry;
 integer i;
 
 wire [3:0] pc_next;
-assign pc_next = regval;
+assign pc_next = (pc_next_sel == PC_FROM_DATA) ? data
+               : (pc_next_sel == PC_FROM_REG)  ? regval
+               : (pc_next_sel == PC_FROM_INST) ? inst_operand
+               : 4'bx;
 
 always @(posedge clock) begin
     if (reset) begin
