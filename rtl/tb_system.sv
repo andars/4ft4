@@ -51,7 +51,11 @@ initial begin
     repeat(2) @(posedge clock);
     reset = 0;
 
-    repeat(8 * `NUM_CYCLES) @(posedge clock);
+    i = 0;
+    while ((dut.cpu.pc_stack.program_counters[dut.cpu.pc_stack.index] < `ROM_SIZE)) begin
+        repeat(8) @(posedge clock);
+        i++;
+    end
 
     $display("Finished.");
     $display(" accumulator: 0x%0x", dut.cpu.datapath.accumulator);

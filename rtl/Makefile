@@ -13,7 +13,7 @@ waves: sim
 sim: lint
 	xxd -l256 -p -c1 $(ROM_BIN) > rom.hex
 	cat rom.hex
-	iverilog -DNUM_CYCLES=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
+	iverilog -DROM_SIZE=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
 	./a.out
 
 lint:
@@ -41,7 +41,7 @@ $(TEST_RUNS): lint
 .PHONY: $(TEST_RUNS)
 $(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
 	mkdir -p $(@D)
-	iverilog -DNUM_CYCLES=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
+	iverilog -DROM_SIZE=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
 	cp $(word 3,$^) rom.hex
 	./a.out > $@
 	mv waves.vcd testruns/$*.vcd
