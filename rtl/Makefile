@@ -11,7 +11,7 @@ waves: sim
 	gtkwave waves.vcd -S signals.tcl #--rcvar 'do_initial_zoom_fit yes'
 
 sim: lint
-	xxd -l256 -p -c1 $(ROM_BIN) > rom.hex
+	xxd -l4096 -p -c1 $(ROM_BIN) > rom.hex
 	cat rom.hex
 	iverilog -DROM_SIZE=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
 	./a.out
@@ -34,7 +34,7 @@ $(info $(TEST_RUNS))
 $(TEST_HEX): testruns/%.hex: ../build/%.bin
 	@echo "Generating hex for $*"
 	mkdir -p $(@D)
-	xxd -l256 -p -c1 $(word 1,$^) > $@
+	xxd -l4096 -p -c1 $(word 1,$^) > $@
 
 $(TEST_RUNS): lint
 

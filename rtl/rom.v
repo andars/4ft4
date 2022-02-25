@@ -7,10 +7,10 @@ module rom(
     input sync
 );
 
-reg [7:0] address;
+reg [11:0] address;
 reg [2:0] cycle;
 
-reg [7:0] memory [255:0];
+reg [7:0] memory [4095:0];
 
 initial begin
     $readmemh("rom.hex", memory);
@@ -27,11 +27,12 @@ end
 
 always @(posedge clock) begin
     if (reset) begin
-        address <= 8'b0;
+        address <= 12'b0;
     end
     else begin
-        address[3:0] <= (cycle == 3'h0) ? data : address[3:0];
-        address[7:4] <= (cycle == 3'h1) ? data : address[7:4];
+        address[ 3:0] <= (cycle == 3'h0) ? data : address[ 3:0];
+        address[ 7:4] <= (cycle == 3'h1) ? data : address[ 7:4];
+        address[11:8] <= (cycle == 3'h2) ? data : address[11:8];
     end
 end
 
