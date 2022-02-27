@@ -289,10 +289,10 @@ void jump_indirect(uint8_t inst) {
     jump_8(target_8);
 }
 
-#define COND_TEST  (1 << 0x0)
-#define COND_CARRY (1 << 0x1)
-#define COND_ACC   (1 << 0x2)
-#define COND_INV   (1 << 0x4)
+#define COND_TEST  (1 << 0)
+#define COND_CARRY (1 << 1)
+#define COND_ACC   (1 << 2)
+#define COND_INV   (1 << 3)
 void jump_conditional(uint8_t inst, uint8_t second) {
     uint8_t cond_spec = lo(inst);
     uint8_t target_8 = second;
