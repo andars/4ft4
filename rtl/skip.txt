@@ -1,4 +1,3 @@
-fin
 jump/jcn
 jms
 ram

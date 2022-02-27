@@ -19,7 +19,8 @@ module cpu_control(
     output reg [1:0] alu_in1_sel,
     output reg [1:0] alu_cin_sel,
     output reg [1:0] pc_next_sel,
-    output reg [2:0] pc_write_enable
+    output reg [2:0] pc_write_enable,
+    output reg reg_out_enable
 );
 
 `include "datapath.vh"
@@ -32,8 +33,14 @@ reg two_word_next;
 
 reg inst_operand_adj;
 
+// todo: remove this
+reg [3:0] inst_operand_override;
+reg inst_operand_override_en;
+
 // pass out the low 4b for use in the datapath
-assign inst_operand = inst[3:0] ^ {3'b0, inst_operand_adj};
+assign inst_operand = inst_operand_override_en ? inst_operand_override : inst[3:0] ^ {3'b0, inst_operand_adj};
+
+reg [7:0] addr;
 
 always @(posedge clock) begin
     if (reset) begin
@@ -82,6 +89,10 @@ always @(*) begin
     two_word_next = two_word;
 
     inst_operand_adj = 0;
+    inst_operand_override = 4'h0;
+    inst_operand_override_en = 0;
+
+    reg_out_enable = 0;
 
     if (two_word) begin
         // control signals for the second system cycle
@@ -96,6 +107,41 @@ always @(*) begin
         case (inst[7:4])
             4'h2: begin
                 // FIM
+                if (cycle == 3'h3) begin
+                    // write the high 4b of data into the first register in the
+                    // pair (inst[3:0])
+                    reg_input_sel = REG_IN_FROM_DATA;
+                    write_register = 1;
+                end
+
+                if (cycle == 3'h4) begin
+                    // switch to the second register in the pair
+                    // and write the low 4b of data
+                    inst_operand_adj = 1'b1;
+
+                    reg_input_sel = REG_IN_FROM_DATA;
+                    write_register = 1;
+                end
+            end
+            4'h3: begin
+                // FIN: indirect fetch
+
+                // write out the values of registers 0 and 1
+                // as the low 8b of the address
+                if (cycle == 3'h0) begin
+                    inst_operand_override = 4'h1;
+                    inst_operand_override_en = 1;
+                    reg_out_enable = 1;
+                end
+                if (cycle == 3'h1) begin
+                    inst_operand_override = 4'h0;
+                    inst_operand_override_en = 1;
+                    reg_out_enable = 1;
+                end
+
+                // allow the high 4b of the address to come
+                // from the PC, as normal
+
                 if (cycle == 3'h3) begin
                     // write the high 4b of data into the first register in the
                     // pair (inst[3:0])
@@ -160,12 +206,9 @@ always @(*) begin
             end
             else begin
                 // FIN: indirect fetch
-
-                // TODO:
-                // - this is a two cycle instruction
-                // - PC unit needs to be disabled for the second cycle
-                // - register {0,1} is sent to ROM instead of PC, and
-                //   loaded into destination registers
+                if (cycle == 3'h5) begin
+                    two_word_next = 1;
+                end
             end
         end
         4'h4: begin

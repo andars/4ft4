@@ -33,6 +33,10 @@ wire [3:0] regval;
 
 wire [3:0] inst_operand;
 
+// Write the regval from the datapath onto the external data pins.
+// This takes precedence over pc_enable if both are set.
+wire reg_out_enable;
+
 cpu_control cpu_control(
     .clock(clock),
     .reset(reset),
@@ -52,7 +56,8 @@ cpu_control cpu_control(
     .alu_in1_sel(alu_in1_sel),
     .alu_cin_sel(alu_cin_sel),
     .pc_next_sel(pc_next_sel),
-    .pc_write_enable(pc_write_enable)
+    .pc_write_enable(pc_write_enable),
+    .reg_out_enable(reg_out_enable)
 );
 
 pc_stack pc_stack(
@@ -90,7 +95,8 @@ datapath datapath(
     .regval(regval)
 );
 
-assign data = pc_enable ? pc_word : 4'bz;
+assign data = reg_out_enable ? regval :
+              pc_enable ? pc_word : 4'bz;
 
 // pulse ROM command line low in subcycle 2
 assign rom_cmd = ~(cycle == 3'h2);
