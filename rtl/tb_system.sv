@@ -41,7 +41,9 @@ integer i;
 initial begin
     $dumpfile("waves.vcd");
     $dumpvars;
-    $dumpvars(0, dut.cpu.pc_stack.program_counters[0]);
+    for (i = 0; i < 3; i++) begin
+        $dumpvars(0, dut.cpu.pc_stack.program_counters[i]);
+    end
 
     for (i = 0; i < 16; i++) begin
         $dumpvars(0, dut.cpu.datapath.registers[i]);
@@ -66,6 +68,10 @@ initial begin
     end
     $display(" carry: %0d", dut.cpu.datapath.carry);
     $display(" pc: 0x%0x", dut.cpu.pc_stack.program_counters[0]);
+    $display(" stack pointer: 0x%0x", dut.cpu.pc_stack.index);
+    for (i = 0; i < 4; i++) begin
+        $display(" stack %1d: 0x%0x", i, dut.cpu.pc_stack.program_counters[i]);
+    end
 
     $finish;
 end

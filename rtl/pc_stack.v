@@ -30,6 +30,12 @@ assign pc_next = (pc_next_sel == PC_FROM_DATA) ? data
                : (pc_next_sel == PC_FROM_INST) ? inst_operand
                : 4'bx;
 
+wire [1:0] index_next;
+assign index_next = (control == PC_STACK_NOP) ? index
+                  : (control == PC_STACK_PUSH) ? index + 1
+                  : (control == PC_STACK_POP) ? index - 1
+                  : 2'bx;
+
 always @(posedge clock) begin
     if (reset) begin
         for (i = 0; i < 4; i++) begin
@@ -46,6 +52,9 @@ always @(posedge clock) begin
     end
     else if (cycle == 3'h2) begin
         program_counters[index][11:8] <= program_counters[index][11:8] + {3'b0, carry};
+
+        // and update the slot index
+        index <= index_next;
     end
     else if (pc_write_enable != 3'b0) begin
         if (pc_write_enable[0]) begin
@@ -65,17 +74,6 @@ always @(posedge clock) begin
         end
         else begin
             program_counters[index] <= program_counters[index];
-        end
-
-        // and update the slot index if needed
-        if (control == 0) begin
-            index <= index;
-        end
-        else if (control == 1) begin
-            index <= index + 1;
-        end
-        else if (control == 2) begin
-            index <= index - 1;
         end
     end
 end

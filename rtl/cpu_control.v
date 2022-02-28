@@ -20,6 +20,7 @@ module cpu_control(
     output reg [1:0] alu_cin_sel,
     output reg [1:0] pc_next_sel,
     output reg [2:0] pc_write_enable,
+    output reg [1:0] pc_control,
     output reg reg_out_enable
 );
 
@@ -85,6 +86,8 @@ always @(*) begin
     alu_cin_sel = 0;
 
     pc_write_enable = 0;
+    pc_next_sel = 2'bx;
+    pc_control = 0;
 
     two_word_next = two_word;
 
@@ -176,6 +179,27 @@ always @(*) begin
                     pc_next_sel = PC_FROM_INST;
                 end
             end
+            4'h5: begin
+                // JMS
+                if (cycle == 3'h2) begin
+                    pc_control = PC_STACK_PUSH;
+                end
+                if (cycle == 3'h3) begin
+                    // write the high 4b of data into pc[7:4]
+                    pc_write_enable = 3'b010;
+                    pc_next_sel = PC_FROM_DATA;
+                end
+                if (cycle == 3'h4) begin
+                    // write the low 4b of data into pc[3:0]
+                    pc_write_enable = 3'b001;
+                    pc_next_sel = PC_FROM_DATA;
+                end
+                if (cycle == 3'h5) begin
+                    // write inst_operand into pc[11:8]
+                    pc_write_enable = 3'b100;
+                    pc_next_sel = PC_FROM_INST;
+                end
+            end
             default: begin end
         endcase
     end
@@ -213,6 +237,12 @@ always @(*) begin
         end
         4'h4: begin
             // JUN
+            if (cycle == 3'h5) begin
+                two_word_next = 1;
+            end
+        end
+        4'h5: begin
+            // JMS
             if (cycle == 3'h5) begin
                 two_word_next = 1;
             end
