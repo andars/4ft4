@@ -162,7 +162,7 @@ always @(*) begin
                 end
             end
             4'h4: begin
-                // JUN
+                // JUN: unconditional jump
                 if (cycle == 3'h3) begin
                     // write the high 4b of data into pc[7:4]
                     pc_write_enable = 3'b010;
@@ -180,7 +180,7 @@ always @(*) begin
                 end
             end
             4'h5: begin
-                // JMS
+                // JMS: jump to subroutine
                 if (cycle == 3'h2) begin
                     pc_control = PC_STACK_PUSH;
                 end
@@ -290,14 +290,14 @@ always @(*) begin
             end
         end
         4'ha: begin
-            // load register into accumulator
+            // LD: load register into accumulator
             if (cycle == 3'h5) begin
                 acc_input_sel = ACC_IN_FROM_REG;
                 write_accumulator = 1;
             end
         end
         4'hb: begin
-            // swap values in register and accumulator
+            // XCH: swap values in register and accumulator
             if (cycle == 3'h5) begin
                 acc_input_sel = ACC_IN_FROM_REG;
                 write_accumulator = 1;
@@ -317,7 +317,7 @@ always @(*) begin
             end
         end
         4'hd: begin
-            // load immediate into accumulator
+            // LDM: load immediate into accumulator
             if (cycle == 3'h5) begin
                 acc_input_sel = ACC_IN_FROM_IMM;
                 write_accumulator = 1;
