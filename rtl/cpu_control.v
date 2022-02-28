@@ -87,7 +87,7 @@ always @(*) begin
 
     pc_write_enable = 0;
     pc_next_sel = 2'bx;
-    pc_control = 0;
+    pc_control = PC_STACK_NOP;
 
     two_word_next = two_word;
 
@@ -304,6 +304,16 @@ always @(*) begin
 
                 reg_input_sel = REG_IN_FROM_ACC;
                 write_register = 1;
+            end
+        end
+        4'hc: begin
+            // BBL: branch back from subroutine and load accumulator
+            if (cycle == 3'h2) begin
+                pc_control = PC_STACK_POP;
+            end
+            if (cycle == 3'h5) begin
+                acc_input_sel = ACC_IN_FROM_IMM;
+                write_accumulator = 1;
             end
         end
         4'hd: begin

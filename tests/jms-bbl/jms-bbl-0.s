@@ -8,6 +8,7 @@ JUN L0
 FN0,
     NOP
     BBL 7
+    NOP
 
 L0,
     NOP
