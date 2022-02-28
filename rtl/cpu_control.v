@@ -205,6 +205,9 @@ always @(*) begin
     end
     else begin
     case (inst[7:4])
+        4'h0: begin
+            // NOP: no operation
+        end
         4'h2: begin
             // FIM: fetch immediate
             if (cycle == 3'h5) begin
