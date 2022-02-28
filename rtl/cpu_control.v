@@ -286,6 +286,13 @@ always @(*) begin
                 write_carry = 1;
             end
         end
+        4'ha: begin
+            // load register into accumulator
+            if (cycle == 3'h5) begin
+                acc_input_sel = ACC_IN_FROM_REG;
+                write_accumulator = 1;
+            end
+        end
         4'hb: begin
             // swap values in register and accumulator
             if (cycle == 3'h5) begin
@@ -300,13 +307,6 @@ always @(*) begin
             // load immediate into accumulator
             if (cycle == 3'h5) begin
                 acc_input_sel = ACC_IN_FROM_IMM;
-                write_accumulator = 1;
-            end
-        end
-        4'ha: begin
-            // load register into accumulator
-            if (cycle == 3'h5) begin
-                acc_input_sel = ACC_IN_FROM_REG;
                 write_accumulator = 1;
             end
         end
