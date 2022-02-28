@@ -9,8 +9,9 @@ JMS 8
 / 0x8
 NOP
 
-!expect stack pointer: 0x1
-!expect stack 0: 0x8
+!expect stack pointer: 0x0
+!expect stack 0: 0x9
 !expect stack 1: 0x4
 !expect stack 2: 0x6
+!expect stack 3: 0x8
 

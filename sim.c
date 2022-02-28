@@ -22,10 +22,11 @@ int print_ram = 0;
 #define RAM_SIZE (NUM_REGS_PER_RAM * RAM_REG_WIDTH)
 #define NUM_RAMS 4
 #define NUM_ROMS 2
-#define STACK_SIZE 3
+#define NUM_PC_SLOTS 4
 
 typedef struct {
-    uint16_t pc;
+    uint16_t pc_stack[NUM_PC_SLOTS];
+    uint8_t stack_pointer;
 
     uint8_t accumulator;
     uint8_t carry;
@@ -39,9 +40,6 @@ typedef struct {
     uint8_t rom_ports[NUM_ROMS];
 
     uint8_t test_signal;
-
-    uint16_t stack[STACK_SIZE];
-    uint8_t stack_pointer;
 } ProcessorState;
 
 ProcessorState state;
@@ -54,6 +52,10 @@ typedef enum {
     XCH,
 } AluOp;
 
+uint16_t current_pc() {
+    return state.pc_stack[state.stack_pointer];
+}
+
 void print_processor_state() {
     printf("---\n");
     printf("Current state:\n");
@@ -65,11 +67,11 @@ void print_processor_state() {
         printf(" - %dP : 0x%02x\n", i/2, (state.registers[i] << 4) | state.registers[i+1]);
     }
     printf(" stack pointer: 0x%x\n", state.stack_pointer);
-    for (int i = 0; i < STACK_SIZE; i++) {
-        printf(" stack %d: 0x%x\n", i, state.stack[i]);
+    for (int i = 0; i < NUM_PC_SLOTS; i++) {
+        printf(" stack %d: 0x%x\n", i, state.pc_stack[i]);
     }
     printf(" carry: %d\n", state.carry);
-    printf(" pc: 0x%x\n", state.pc);
+    printf(" pc: 0x%x\n", current_pc());
     if (print_ram) {
         for (int ram = 0; ram < NUM_RAMS; ram++) {
             for (int reg = 0; reg < NUM_REGS_PER_RAM; reg++) {
@@ -84,6 +86,7 @@ void print_processor_state() {
     }
     printf("---\n");
 }
+
 
 void randomize_processor_state() {
     state.accumulator = lo(rand());
@@ -100,14 +103,12 @@ void init_ram() {
     state.ram[16] = 3;
 }
 
-void push_stack(uint16_t addr) {
-    state.stack[state.stack_pointer] = addr;
-    state.stack_pointer = (state.stack_pointer + 1) % STACK_SIZE;
+void push_stack() {
+    state.stack_pointer = (state.stack_pointer + 1) % NUM_PC_SLOTS;
 }
 
-uint16_t pop_stack() {
-    state.stack_pointer = (state.stack_pointer + STACK_SIZE - 1) % STACK_SIZE;
-    return state.stack[state.stack_pointer];
+void pop_stack() {
+    state.stack_pointer = (state.stack_pointer + NUM_PC_SLOTS - 1) % NUM_PC_SLOTS;
 }
 
 void exec_alu_inst(uint8_t inst, AluOp op) {
@@ -268,7 +269,7 @@ void fetch_immediate(uint8_t inst, uint8_t data) {
 }
 
 void jump_12(uint16_t target) {
-    state.pc = target;
+    state.pc_stack[state.stack_pointer] = target;
 }
 
 void jump_unconditional(uint8_t inst, uint8_t second) {
@@ -278,7 +279,7 @@ void jump_unconditional(uint8_t inst, uint8_t second) {
 }
 
 void jump_8(uint8_t target) {
-    uint16_t target_12 = (state.pc & ~0xff) | target;
+    uint16_t target_12 = (current_pc() & ~0xff) | target;
     jump_12(target_12);
 }
 
@@ -331,15 +332,13 @@ void increment_and_jump_if_zero(uint8_t inst, uint8_t target) {
 void call(uint8_t inst, uint8_t second) {
     uint16_t target = (((uint16_t)lo(inst)) << 8) | second;
 
-    push_stack(state.pc);
+    push_stack();
     jump_12(target);
 }
 
 void load_and_ret(uint8_t inst) {
     load_accumulator(inst);
-
-    uint16_t ret_addr = pop_stack();
-    jump_12(ret_addr);
+    pop_stack();
 }
 
 void set_address(uint8_t inst) {
@@ -439,7 +438,7 @@ void fetch_indirect(FILE *in, uint8_t inst) {
     uint8_t reg = lo(inst);
 
     uint8_t src_addr_8 = (state.registers[0] << 4) | state.registers[1];
-    uint16_t src_addr_12 = (state.pc & ~0xff) | src_addr_8;
+    uint16_t src_addr_12 = (current_pc() & ~0xff) | src_addr_8;
 
     uint8_t data = read_rom(in, src_addr_12);
 
@@ -450,12 +449,12 @@ void fetch_indirect(FILE *in, uint8_t inst) {
 int read_instruction(FILE *in, uint8_t *inst) {
     size_t count;
 
-    fseek(in, state.pc, SEEK_SET);
+    fseek(in, current_pc(), SEEK_SET);
 
     count = fread(inst, 1, 1, in);
 
     if (count != 0) {
-        state.pc++;
+        state.pc_stack[state.stack_pointer]++;
     }
 
     return count;
@@ -465,7 +464,7 @@ int exec_instruction(FILE *in) {
     uint8_t inst, second;
     size_t count;
 
-    fseek(in, state.pc, SEEK_SET);
+    fseek(in, current_pc(), SEEK_SET);
 
     count = read_instruction(in, &inst);
     if (count == 0) {
