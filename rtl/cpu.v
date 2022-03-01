@@ -33,6 +33,7 @@ wire [1:0] alu_cin_sel;
 wire [3:0] regval;
 
 wire [3:0] inst_operand;
+wire take_branch;
 
 // Write the regval from the datapath onto the external data pins.
 // This takes precedence over pc_enable if both are set.
@@ -42,6 +43,7 @@ cpu_control cpu_control(
     .clock(clock),
     .reset(reset),
     .data(data),
+    .take_branch(take_branch),
     .sync(sync),
     .cycle(cycle),
     .inst_operand(inst_operand),
@@ -94,7 +96,8 @@ datapath datapath(
     .alu_in0_sel(alu_in0_sel),
     .alu_in1_sel(alu_in1_sel),
     .alu_cin_sel(alu_cin_sel),
-    .regval(regval)
+    .regval(regval),
+    .take_branch(take_branch)
 );
 
 assign data = reg_out_enable ? regval :

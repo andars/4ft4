@@ -4,6 +4,7 @@ module cpu_control(
     input clock,
     input reset,
     input [3:0] data,
+    input take_branch,
     output sync,
     output reg [2:0] cycle,
     output [3:0] inst_operand,
@@ -108,6 +109,23 @@ always @(*) begin
         end
 
         case (inst[7:4])
+            4'h1: begin
+                // JCN: conditional jump
+                // condition in inst_operand
+                // address in the subsequent word (data during sc3 & sc4)
+                if (take_branch) begin
+                    if (cycle == 3'h3) begin
+                        // write the high 4b of data into pc[7:4]
+                        pc_write_enable = 3'b010;
+                        pc_next_sel = PC_FROM_DATA;
+                    end
+                    if (cycle == 3'h4) begin
+                        // write the low 4b of data into pc[3:0]
+                        pc_write_enable = 3'b001;
+                        pc_next_sel = PC_FROM_DATA;
+                    end
+                end
+            end
             4'h2: begin
                 // FIM
                 if (cycle == 3'h3) begin
@@ -207,6 +225,12 @@ always @(*) begin
     case (inst[7:4])
         4'h0: begin
             // NOP: no operation
+        end
+        4'h1: begin
+            // JCN
+            if (cycle == 3'h5) begin
+                two_word_next = 1;
+            end
         end
         4'h2: begin
             // FIM: fetch immediate

@@ -29,6 +29,7 @@ lappend signals "tb_system.dut.cpu.datapath.\\registers\[12\]\[3:0\]"
 lappend signals "tb_system.dut.cpu.datapath.\\registers\[13\]\[3:0\]"
 lappend signals "tb_system.dut.cpu.datapath.\\registers\[14\]\[3:0\]"
 lappend signals "tb_system.dut.cpu.datapath.\\registers\[15\]\[3:0\]"
+lappend signals "tb_system.dut.cpu.datapath.take_branch"
 
 set num_added [ gtkwave::addSignalsFromList $signals ]
 

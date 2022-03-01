@@ -16,7 +16,8 @@ module datapath(
     input [1:0] alu_in0_sel,
     input [1:0] alu_in1_sel,
     input [1:0] alu_cin_sel,
-    output [3:0] regval
+    output [3:0] regval,
+    output take_branch
 );
 
 `include "datapath.vh"
@@ -96,5 +97,23 @@ always @(posedge clock) begin
         end
     end
 end
+
+reg _take_branch;
+always @(*) begin
+    _take_branch = 0;
+    /* TODO: add test signal
+    if (inst_operand[0]  && test ) begin
+        _take_branch = 1;
+    end
+    */
+    if (inst_operand[1] && carry) begin
+        _take_branch = 1;
+    end
+    if (inst_operand[2] && (accumulator == 4'h0)) begin
+        _take_branch = 1;
+    end
+end
+
+assign take_branch = inst_operand[3] ? ~_take_branch : _take_branch;
 
 endmodule
