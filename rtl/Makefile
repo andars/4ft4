@@ -2,14 +2,15 @@ VERILATOR ?= /home/andrew/verilator/bin/verilator
 
 .PHONY: waves sim lint
 
-ROM_BIN ?= ../build/add/add.bin
+ROM_BIN ?= ../build/ram/1.bin
 
 CPU_FILES = cpu.v cpu_control.v pc_stack.v datapath.v alu.v
-SYSTEM_FILES = $(CPU_FILES) system.v rom.v
+SYSTEM_FILES = $(CPU_FILES) system.v rom.v ram.v
 
 waves: sim
 	gtkwave waves.vcd -S signals.tcl #--rcvar 'do_initial_zoom_fit yes'
 
+# TODO: fix rom sizing issues here - shell evaluated before rom changes?
 sim: lint
 	xxd -l4096 -p -c1 $(ROM_BIN) > rom.hex
 	cat rom.hex

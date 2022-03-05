@@ -38,6 +38,8 @@ always @(posedge clock) begin
 end
 
 integer i;
+integer j;
+
 initial begin
     $dumpfile("waves.vcd");
     $dumpvars;
@@ -47,6 +49,13 @@ initial begin
 
     for (i = 0; i < 16; i++) begin
         $dumpvars(0, dut.cpu.datapath.registers[i]);
+    end
+
+    for (i = 0; i < 64; i++) begin
+        $dumpvars(0, dut.ram_1.memory[i]);
+    end
+    for (i = 0; i < 16; i++) begin
+        $dumpvars(0, dut.ram_1.status[i]);
     end
 
     reset = 1;
@@ -71,6 +80,13 @@ initial begin
     $display(" stack pointer: 0x%0x", dut.cpu.pc_stack.index);
     for (i = 0; i < 4; i++) begin
         $display(" stack %1d: 0x%0x", i, dut.cpu.pc_stack.program_counters[i]);
+    end
+    for (i = 0; i < 4; i++) begin
+        $write(" ram 0 reg %1d:", i);
+        for (j = 0; j < 16; j++) begin
+            $write(" %1d", dut.ram_1.memory[16*i + j]);
+        end
+        $write("\n");
     end
 
     $finish;

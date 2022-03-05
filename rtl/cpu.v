@@ -7,7 +7,7 @@ module cpu(
     input test,
     output sync,
     output rom_cmd,
-    output [3:0] ram_cmd
+    output [3:0] ram_cmd_n
 );
 
 wire pc_enable;
@@ -31,9 +31,14 @@ wire [1:0] alu_in0_sel;
 wire [1:0] alu_in1_sel;
 wire [1:0] alu_cin_sel;
 wire [3:0] regval;
+wire [3:0] acc;
 
 wire [3:0] inst_operand;
 wire take_branch;
+
+// Write the accumulator from the datapath onto the external data pins.
+// This takes precedence over reg_out_enable/pc_enable if multiple are set.
+wire acc_out_enable;
 
 // Write the regval from the datapath onto the external data pins.
 // This takes precedence over pc_enable if both are set.
@@ -61,7 +66,9 @@ cpu_control cpu_control(
     .pc_next_sel(pc_next_sel),
     .pc_write_enable(pc_write_enable),
     .pc_control(pc_control),
-    .reg_out_enable(reg_out_enable)
+    .reg_out_enable(reg_out_enable),
+    .acc_out_enable(acc_out_enable),
+    .ram_cmd_out(ram_cmd_n)
 );
 
 pc_stack pc_stack(
@@ -97,10 +104,12 @@ datapath datapath(
     .alu_in1_sel(alu_in1_sel),
     .alu_cin_sel(alu_cin_sel),
     .regval(regval),
+    .acc(acc),
     .take_branch(take_branch)
 );
 
-assign data = reg_out_enable ? regval :
+assign data = acc_out_enable ? acc :
+              reg_out_enable ? regval :
               pc_enable ? pc_word : 4'bz;
 
 // pulse ROM command line low in subcycle 2

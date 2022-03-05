@@ -22,7 +22,9 @@ module cpu_control(
     output reg [1:0] pc_next_sel,
     output reg [2:0] pc_write_enable,
     output reg [1:0] pc_control,
-    output reg reg_out_enable
+    output reg reg_out_enable,
+    output reg acc_out_enable,
+    output [3:0] ram_cmd_out
 );
 
 `include "datapath.vh"
@@ -44,6 +46,10 @@ assign inst_operand = inst_operand_override_en ? inst_operand_override : inst[3:
 
 reg [7:0] addr;
 
+reg [3:0] ram_cmd;
+reg [3:0] ram_cmd_next;
+reg ram_cmd_en;
+
 always @(posedge clock) begin
     if (reset) begin
         cycle <= 3'b0;
@@ -54,6 +60,7 @@ always @(posedge clock) begin
 end
 
 assign sync = ~(cycle == 3'b111);
+assign ram_cmd_out = ((ram_cmd_en == 1) || (cycle == 3'h2)) ? ~ram_cmd : 4'hf;
 
 // read data from ROM into an internal register
 // during subcycles 3 and 4
@@ -97,6 +104,10 @@ always @(*) begin
     inst_operand_override_en = 0;
 
     reg_out_enable = 0;
+    acc_out_enable = 0;
+
+    ram_cmd_en = 0;
+    ram_cmd_next = ram_cmd;
 
     if (two_word) begin
         // control signals for the second system cycle
@@ -233,9 +244,22 @@ always @(*) begin
             end
         end
         4'h2: begin
-            // FIM: fetch immediate
-            if (cycle == 3'h5) begin
-                two_word_next = 1;
+            if (inst[0]) begin
+                // SRC: send address
+                // TODO: confirm order here
+                if (cycle == 3'h6) begin
+                    reg_out_enable = 1;
+                    ram_cmd_en = 1;
+                    inst_operand_adj = 1'b1;
+                end
+                else if (cycle == 3'h7) begin
+                    reg_out_enable = 1;
+                end
+            end else begin
+                // FIM: fetch immediate
+                if (cycle == 3'h5) begin
+                    two_word_next = 1;
+                end
             end
         end
         4'h3: begin
@@ -338,6 +362,24 @@ always @(*) begin
             if (cycle == 3'h5) begin
                 acc_input_sel = ACC_IN_FROM_IMM;
                 write_accumulator = 1;
+            end
+        end
+        4'he: begin
+            // I/O or memory instruction
+            if (cycle == 3'h4) begin
+                ram_cmd_en = 1;
+            end
+            else begin
+                case (inst[3:0])
+                4'h0: begin
+                    // WRM: write accumulator to RAM
+                    if (cycle == 3'h6) begin
+                        acc_out_enable = 1;
+                    end
+                end
+                default: begin
+                end
+                endcase
             end
         end
         4'hd: begin
@@ -496,9 +538,11 @@ end
 always @(posedge clock) begin
     if (reset) begin
         two_word <= 0;
+        ram_cmd <= 4'h1;
     end
     else begin
         two_word <= two_word_next;
+        ram_cmd <= ram_cmd_next;
     end
 end
 endmodule

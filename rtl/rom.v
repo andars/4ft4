@@ -4,7 +4,9 @@ module rom(
     input clock,
     input reset,
     inout [3:0] data,
-    input sync
+    input sync,
+    input cmd,
+    inout [3:0] io
 );
 
 reg [11:0] address;

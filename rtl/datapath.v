@@ -17,6 +17,7 @@ module datapath(
     input [1:0] alu_in1_sel,
     input [1:0] alu_cin_sel,
     output [3:0] regval,
+    output [3:0] acc,
     output take_branch
 );
 
@@ -28,6 +29,7 @@ reg carry;
 reg [3:0] registers [15:0];
 
 assign regval = registers[inst_operand];
+assign acc = accumulator;
 
 wire [4:0] alu_result;
 
