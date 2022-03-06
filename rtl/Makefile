@@ -20,7 +20,7 @@ sim: lint
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)
 
-TEST_SOURCES := $(shell find ../tests -name '*.s' | grep -v -f skip.txt)
+TEST_SOURCES := $(sort $(shell find ../tests -name '*.s' | grep -v -f skip.txt))
 $(info skipping $(shell find ../tests -name '*.s' | grep -f skip.txt))
 TEST_BINARIES := $(patsubst ../tests/%.s,../build/%.bin,$(TEST_SOURCES))
 TEST_RUNS := $(patsubst ../build/%.bin,testruns/%.log,$(TEST_BINARIES))
