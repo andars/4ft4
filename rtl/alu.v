@@ -3,9 +3,10 @@
 module alu(
     input [3:0] regval,
     input [3:0] acc,
+    input [3:0] data,
     input carry,
     input [2:0] alu_op,
-    input [1:0] alu_in0_sel,
+    input [2:0] alu_in0_sel,
     input [1:0] alu_in1_sel,
     input [1:0] alu_cin_sel,
     output [4:0] result
@@ -24,6 +25,7 @@ assign alu_in0 = (alu_in0_sel == ALU_IN0_ACC) ? acc
                : (alu_in0_sel == ALU_IN0_ACC_INV) ? ~acc
                : (alu_in0_sel == ALU_IN0_REG) ? regval
                : (alu_in0_sel == ALU_IN0_REG_INV) ? ~regval
+               : (alu_in0_sel == ALU_IN0_DATA) ? data
                : 4'bx;
 
 assign alu_in1 = (alu_in1_sel == ALU_IN1_ACC) ? acc

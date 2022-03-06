@@ -13,7 +13,7 @@ module datapath(
     input write_register,
     input [1:0] reg_input_sel,
     input [2:0] alu_op,
-    input [1:0] alu_in0_sel,
+    input [2:0] alu_in0_sel,
     input [1:0] alu_in1_sel,
     input [1:0] alu_cin_sel,
     output [3:0] regval,
@@ -37,6 +37,7 @@ wire [4:0] alu_result;
 alu alu(
     .regval(regval),
     .acc(accumulator),
+    .data(data),
     .carry(carry),
     .alu_op(alu_op),
     .alu_in0_sel(alu_in0_sel),

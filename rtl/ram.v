@@ -81,6 +81,9 @@ always @(*) begin
             4'h9: begin
                 ram_to_data = 1;
             end
+            4'hb: begin
+                ram_to_data = 1;
+            end
             default: begin
             end
             endcase

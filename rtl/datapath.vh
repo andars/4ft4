@@ -19,10 +19,11 @@ localparam ALU_OP_PASS   = 3'b011;
 localparam ALU_OP_DEC_A  = 3'b100;
 localparam ALU_OP_LG2_1  = 3'b101;
 
-localparam ALU_IN0_ACC     = 2'b00;
-localparam ALU_IN0_REG     = 2'b01;
-localparam ALU_IN0_ACC_INV = 2'b10;
-localparam ALU_IN0_REG_INV = 2'b11;
+localparam ALU_IN0_ACC     = 3'b000;
+localparam ALU_IN0_REG     = 3'b001;
+localparam ALU_IN0_ACC_INV = 3'b010;
+localparam ALU_IN0_REG_INV = 3'b011;
+localparam ALU_IN0_DATA    = 3'b100;
 
 localparam ALU_IN1_ACC     = 2'b00;
 localparam ALU_IN1_REG     = 2'b01;
