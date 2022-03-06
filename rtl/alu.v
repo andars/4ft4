@@ -26,6 +26,7 @@ assign alu_in0 = (alu_in0_sel == ALU_IN0_ACC) ? acc
                : (alu_in0_sel == ALU_IN0_REG) ? regval
                : (alu_in0_sel == ALU_IN0_REG_INV) ? ~regval
                : (alu_in0_sel == ALU_IN0_DATA) ? data
+               : (alu_in0_sel == ALU_IN0_DATA_INV) ? ~data
                : 4'bx;
 
 assign alu_in1 = (alu_in1_sel == ALU_IN1_ACC) ? acc

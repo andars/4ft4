@@ -410,6 +410,19 @@ always @(*) begin
                         acc_out_enable = 1;
                     end
                 end
+                4'h8: begin
+                    // SBM: subtract RAM from accumulator
+                    if (cycle == 3'h6) begin
+                        alu_in0_sel = ALU_IN0_DATA_INV;
+                        alu_in1_sel = ALU_IN1_ACC;
+                        alu_cin_sel = ALU_CIN_CARRY_INV;
+                        alu_op = ALU_OP_ADD;
+
+                        acc_input_sel = ACC_IN_FROM_ALU;
+                        write_accumulator = 1;
+                        write_carry = 1;
+                    end
+                end
                 4'h9: begin
                     // RDM: read RAM to accumulator
                     if (cycle == 3'h6) begin
