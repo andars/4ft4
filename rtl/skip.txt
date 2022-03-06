@@ -1,3 +1,2 @@
-ram/rdm
 ram/adm
 ram/sbm

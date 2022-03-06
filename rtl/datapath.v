@@ -50,6 +50,7 @@ integer i;
 wire [3:0] acc_input;
 
 assign acc_input = (acc_input_sel == ACC_IN_FROM_REG)    ? regval
+                 : (acc_input_sel == ACC_IN_FROM_DATA)   ? data
                  : (acc_input_sel == ACC_IN_FROM_ALU)    ? alu_result[3:0]
                  : (acc_input_sel == ACC_IN_FROM_IMM)    ? inst_operand
                  : (acc_input_sel == ACC_IN_FROM_CARRY)  ? {3'b0, carry}

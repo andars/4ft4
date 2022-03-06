@@ -410,6 +410,13 @@ always @(*) begin
                         acc_out_enable = 1;
                     end
                 end
+                4'h9: begin
+                    // RDM: read RAM to accumulator
+                    if (cycle == 3'h6) begin
+                        acc_input_sel = ACC_IN_FROM_DATA;
+                        write_accumulator = 1;
+                    end
+                end
                 default: begin
                 end
                 endcase

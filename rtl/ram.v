@@ -67,14 +67,19 @@ always @(posedge clock) begin
 end
 
 reg write_ram;
+reg ram_to_data;
 
 always @(*) begin
     write_ram = 0;
+    ram_to_data = 0;
     if (inst_active) begin
         if (cycle == 3'h6) begin
             case (inst)
             4'h0: begin
                 write_ram = 1;
+            end
+            4'h9: begin
+                ram_to_data = 1;
             end
             default: begin
             end
@@ -97,5 +102,7 @@ always @(posedge clock) begin
         memory[reg_addr * 16 + char_addr] <= data;
     end
 end
+
+assign data = ram_to_data ? memory[reg_addr * 16 + char_addr] : 4'hz;
 
 endmodule

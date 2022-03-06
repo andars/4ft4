@@ -84,14 +84,14 @@ initial begin
     for (i = 0; i < 4; i++) begin
         $write(" ram 0 reg %1d:", i);
         for (j = 0; j < 16; j++) begin
-            $write(" %1d", dut.ram_1.memory[16*i + j]);
+            $write(" %1x", dut.ram_1.memory[16*i + j]);
         end
         $write("\n");
     end
     for (i = 0; i < 4; i++) begin
         $write(" ram 1 reg %1d:", i);
         for (j = 0; j < 16; j++) begin
-            $write(" %1d", dut.ram_2.memory[16*i + j]);
+            $write(" %1x", dut.ram_2.memory[16*i + j]);
         end
         $write("\n");
     end
