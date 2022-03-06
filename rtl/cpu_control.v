@@ -5,6 +5,7 @@ module cpu_control(
     input reset,
     input [3:0] data,
     input take_branch,
+    input reg_is_zero,
     output sync,
     output reg [2:0] cycle,
     output [3:0] inst_operand,
@@ -229,6 +230,21 @@ always @(*) begin
                     pc_next_sel = PC_FROM_INST;
                 end
             end
+            4'h7: begin
+                // ISZ
+                if (!reg_is_zero) begin
+                    if (cycle == 3'h3) begin
+                        // write the high 4b of data into pc[7:4]
+                        pc_write_enable = 3'b010;
+                        pc_next_sel = PC_FROM_DATA;
+                    end
+                    if (cycle == 3'h4) begin
+                        // write the low 4b of data into pc[3:0]
+                        pc_write_enable = 3'b001;
+                        pc_next_sel = PC_FROM_DATA;
+                    end
+                end
+            end
             default: begin end
         endcase
     end
@@ -309,6 +325,23 @@ always @(*) begin
                 reg_input_sel = REG_IN_FROM_ALU;
                 write_register = 1;
                 // do not update carry
+            end
+        end
+        4'h7: begin
+            // ISZ: increment register and jump if nonzero
+            if (cycle == 3'h5) begin
+                // increment the register specified by inst_operand
+                alu_in0_sel = ALU_IN0_REG;
+                alu_in1_sel = ALU_IN1_ONE;
+                alu_cin_sel = ALU_CIN_ZERO;
+                alu_op = ALU_OP_ADD;
+
+                reg_input_sel = REG_IN_FROM_ALU;
+                write_register = 1;
+                // do not update carry
+
+                // process the 2nd word of the instruction, to jump or not
+                two_word_next = 1;
             end
         end
         4'h8: begin

@@ -35,6 +35,7 @@ wire [3:0] acc;
 
 wire [3:0] inst_operand;
 wire take_branch;
+wire reg_is_zero;
 
 // Write the accumulator from the datapath onto the external data pins.
 // This takes precedence over reg_out_enable/pc_enable if multiple are set.
@@ -49,6 +50,7 @@ cpu_control cpu_control(
     .reset(reset),
     .data(data),
     .take_branch(take_branch),
+    .reg_is_zero(reg_is_zero),
     .sync(sync),
     .cycle(cycle),
     .inst_operand(inst_operand),
@@ -105,7 +107,8 @@ datapath datapath(
     .alu_cin_sel(alu_cin_sel),
     .regval(regval),
     .acc(acc),
-    .take_branch(take_branch)
+    .take_branch(take_branch),
+    .reg_is_zero(reg_is_zero)
 );
 
 assign data = acc_out_enable ? acc :

@@ -1,4 +1,3 @@
-jump/isz
 ram/rdm
 ram/adm
 ram/sbm

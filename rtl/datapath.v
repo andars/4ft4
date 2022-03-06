@@ -18,7 +18,8 @@ module datapath(
     input [1:0] alu_cin_sel,
     output [3:0] regval,
     output [3:0] acc,
-    output take_branch
+    output take_branch,
+    output reg_is_zero
 );
 
 `include "datapath.vh"
@@ -117,5 +118,6 @@ always @(*) begin
 end
 
 assign take_branch = inst_operand[3] ? ~_take_branch : _take_branch;
+assign reg_is_zero = (regval == 4'h0);
 
 endmodule
