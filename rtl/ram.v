@@ -6,6 +6,7 @@ module ram(
     inout [3:0] data,
     input sync,
     input cmd_n,
+    input p0,
     output [3:0] out
 );
 
@@ -25,6 +26,7 @@ end
 reg [1:0] reg_addr;
 reg [3:0] char_addr;
 reg selected;
+reg src_active;
 
 reg [3:0] inst;
 reg inst_active;
@@ -35,25 +37,30 @@ always @(posedge clock) begin
         char_addr <= 4'hf;
         selected <= 0;
         inst <= 0;
+        src_active <= 0;
         inst_active <= 0;
     end else begin
         if (cmd) begin
             if (cycle == 3'h6) begin
                 // SRC
-                // TODO: chip id
-                selected <= 1;
-                reg_addr <= data[1:0];
+                if (data[3:2] == {1'b0, p0}) begin
+                    selected <= 1;
+                    reg_addr <= data[1:0];
+                    src_active <= 1;
+                end else begin
+                    selected <= 0;
+                end
             end
-            if (cycle == 3'h4) begin
+            if ((cycle == 3'h4) && selected) begin
                 inst <= data;
                 inst_active <= 1;
             end
         end else if (cycle == 3'h7) begin
-            if (selected) begin
+            if (src_active) begin
                 // SRC
                 char_addr <= data;
+                src_active <= 0;
             end
-            selected <= 0;
             inst_active <= 0;
         end
     end

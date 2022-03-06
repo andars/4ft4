@@ -39,6 +39,13 @@ lappend signals "tb_system.dut.ram_1.char_addr"
 lappend signals "tb_system.dut.ram_1.selected"
 lappend signals "tb_system.dut.ram_1.write_ram"
 lappend signals "tb_system.dut.ram_1.\\memory\[0\]\[3:0\]"
+lappend signals "tb_system.dut.ram_2.inst"
+lappend signals "tb_system.dut.ram_2.inst_active"
+lappend signals "tb_system.dut.ram_2.reg_addr"
+lappend signals "tb_system.dut.ram_2.char_addr"
+lappend signals "tb_system.dut.ram_2.selected"
+lappend signals "tb_system.dut.ram_2.write_ram"
+lappend signals "tb_system.dut.ram_2.\\memory\[0\]\[3:0\]"
 
 set num_added [ gtkwave::addSignalsFromList $signals ]
 

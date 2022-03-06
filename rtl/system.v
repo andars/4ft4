@@ -36,7 +36,18 @@ ram ram_1(
     .data(data),
     .sync(sync),
     .cmd_n(ram_cmd_n[0]),
-    .out(ram_out)
+    .out(ram_out),
+    .p0(1'b0)
+);
+
+ram ram_2(
+    .clock(clock),
+    .reset(reset),
+    .data(data),
+    .sync(sync),
+    .cmd_n(ram_cmd_n[0]),
+    .out(ram_out),
+    .p0(1'b1)
 );
 
 endmodule

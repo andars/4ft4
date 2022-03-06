@@ -88,6 +88,13 @@ initial begin
         end
         $write("\n");
     end
+    for (i = 0; i < 4; i++) begin
+        $write(" ram 1 reg %1d:", i);
+        for (j = 0; j < 16; j++) begin
+            $write(" %1d", dut.ram_2.memory[16*i + j]);
+        end
+        $write("\n");
+    end
 
     $finish;
 end
