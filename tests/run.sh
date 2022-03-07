@@ -38,9 +38,10 @@ echo "sim_args $sim_args"
 echo "expected"
 declare -p expected
 
-output=`$sim $sim_args $binary`
-
+echo 'running simulator'
 echo "sim command: $sim $sim_args $binary"
+output=`$sim $sim_args $binary`
+echo 'done'
 
 echo "simulator log: $sim_log"
 echo "$output">$sim_log
