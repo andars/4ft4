@@ -81,6 +81,7 @@ void print_processor_state() {
                 }
                 printf("\n");
             }
+            printf(" ram %d port: 0x%1x\n", ram, state.ram_ports[ram]);
             printf("\n");
         }
     }
