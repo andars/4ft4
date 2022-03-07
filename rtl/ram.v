@@ -78,13 +78,7 @@ always @(*) begin
             4'h0: begin
                 write_ram = 1;
             end
-            4'h8: begin
-                ram_to_data = 1;
-            end
-            4'h9: begin
-                ram_to_data = 1;
-            end
-            4'hb: begin
+            4'h8, 4'h9, 4'hb: begin
                 ram_to_data = 1;
             end
             default: begin
