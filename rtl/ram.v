@@ -7,7 +7,7 @@ module ram(
     input sync,
     input cmd_n,
     input p0,
-    output [3:0] out
+    output reg [3:0] out
 );
 
 wire cmd;
@@ -73,17 +73,23 @@ reg write_status;
 reg [1:0] status_idx;
 reg status_to_data;
 
+reg write_output_port;
+
 always @(*) begin
     write_ram = 0;
     ram_to_data = 0;
     write_status = 0;
     status_idx = 0;
     status_to_data = 0;
+    write_output_port = 0;
     if (inst_active) begin
         if (cycle == 3'h6) begin
             case (inst)
             4'h0: begin
                 write_ram = 1;
+            end
+            4'h1: begin
+                write_output_port = 1;
             end
             4'h4, 4'h5, 4'h6, 4'h7: begin
                 write_status = 1;
@@ -125,6 +131,14 @@ always @(posedge clock) begin
         end
     end else if (write_status) begin
         status[reg_addr * 4 + status_idx] <= data;
+    end
+end
+
+always @(posedge clock) begin
+    if (reset) begin
+        out <= 0;
+    end else if (write_output_port) begin
+        out <= data;
     end
 end
 

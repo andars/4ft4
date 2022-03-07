@@ -91,6 +91,7 @@ initial begin
             $write(" %1x", dut.ram_1.status[4*i + j]);
         end
         $write("\n");
+        $display(" ram 0 port: 0x%1x", dut.ram_1.out);
     end
     for (i = 0; i < 4; i++) begin
         $write(" ram 1 reg %1d:", i);
@@ -102,6 +103,7 @@ initial begin
             $write(" %1x", dut.ram_2.status[4*i + j]);
         end
         $write("\n");
+        $display(" ram 1 port: 0x%1x", dut.ram_2.out);
     end
 
     $finish;
