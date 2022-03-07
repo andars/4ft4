@@ -72,6 +72,9 @@ void print_processor_state() {
     }
     printf(" carry: %d\n", state.carry);
     printf(" pc: 0x%x\n", current_pc());
+    for (int rom = 0; rom < NUM_ROMS; rom++) {
+        printf(" rom %d port: 0x%1x\n", rom, state.rom_ports[rom]);
+    }
     if (print_ram) {
         for (int ram = 0; ram < NUM_RAMS; ram++) {
             for (int reg = 0; reg < NUM_REGS_PER_RAM; reg++) {
