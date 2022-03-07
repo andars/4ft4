@@ -79,6 +79,10 @@ void print_processor_state() {
                 for (int c = 0; c < RAM_REG_WIDTH; c++) {
                     printf("%x ", lo(state.ram[c + reg * RAM_REG_WIDTH + ram * RAM_SIZE]));
                 }
+                printf("| ram %d reg %d status: ", ram, reg);
+                for (int s = 0; s < RAM_STATUS_PER_REG; s++) {
+                    printf("%x ", lo(state.ram_status[(RAM_STATUS_PER_REG * NUM_REGS_PER_RAM * ram) + RAM_STATUS_PER_REG * reg + s]));
+                }
                 printf("\n");
             }
             printf(" ram %d port: 0x%1x\n", ram, state.ram_ports[ram]);
