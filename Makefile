@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -Werror
 
 TEST_SOURCES := $(shell find tests -name '*.s')
 TEST_BINARIES := $(patsubst tests/%.s,build/%.bin,$(TEST_SOURCES))
