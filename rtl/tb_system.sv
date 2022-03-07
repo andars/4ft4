@@ -86,6 +86,10 @@ initial begin
         for (j = 0; j < 16; j++) begin
             $write(" %1x", dut.ram_1.memory[16*i + j]);
         end
+        $write(" | ram 0 reg %1d status:", i);
+        for (j = 0; j < 4; j++) begin
+            $write(" %1x", dut.ram_1.status[4*i + j]);
+        end
         $write("\n");
     end
     for (i = 0; i < 4; i++) begin

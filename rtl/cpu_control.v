@@ -410,6 +410,12 @@ always @(*) begin
                         acc_out_enable = 1;
                     end
                 end
+                4'h4, 4'h5, 4'h6, 4'h7: begin
+                    // WRs: write accumulator to RAM status character
+                    if (cycle == 3'h6) begin
+                        acc_out_enable = 1;
+                    end
+                end
                 4'h8: begin
                     // SBM: subtract RAM from accumulator
                     if (cycle == 3'h6) begin

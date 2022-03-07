@@ -69,14 +69,25 @@ end
 reg write_ram;
 reg ram_to_data;
 
+reg write_status;
+reg [1:0] status_idx;
+reg status_to_data;
+
 always @(*) begin
     write_ram = 0;
     ram_to_data = 0;
+    write_status = 0;
+    status_idx = 0;
+    status_to_data = 0;
     if (inst_active) begin
         if (cycle == 3'h6) begin
             case (inst)
             4'h0: begin
                 write_ram = 1;
+            end
+            4'h4, 4'h5, 4'h6, 4'h7: begin
+                write_status = 1;
+                status_idx = inst[1:0];
             end
             4'h8, 4'h9, 4'hb: begin
                 ram_to_data = 1;
@@ -100,6 +111,16 @@ always @(posedge clock) begin
         end
     end else if (write_ram) begin
         memory[reg_addr * 16 + char_addr] <= data;
+    end
+end
+
+always @(posedge clock) begin
+    if (reset) begin
+        for (i = 0; i < 16; i++) begin
+            status[i] <= 0;
+        end
+    end else if (write_status) begin
+        status[reg_addr * 4 + status_idx] <= data;
     end
 end
 
