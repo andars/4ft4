@@ -1,3 +1,2 @@
 io/wmp
 io/wrr
-ram/status.1

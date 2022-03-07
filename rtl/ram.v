@@ -92,6 +92,10 @@ always @(*) begin
             4'h8, 4'h9, 4'hb: begin
                 ram_to_data = 1;
             end
+            4'hc, 4'hd, 4'he, 4'hf: begin
+                status_to_data = 1;
+                status_idx = inst[1:0];
+            end
             default: begin
             end
             endcase
@@ -124,6 +128,8 @@ always @(posedge clock) begin
     end
 end
 
-assign data = ram_to_data ? memory[reg_addr * 16 + char_addr] : 4'hz;
+assign data = ram_to_data ? memory[reg_addr * 16 + char_addr]
+            : status_to_data ? status[reg_addr * 4 + status_idx]
+            : 4'hz;
 
 endmodule
