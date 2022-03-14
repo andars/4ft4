@@ -32,6 +32,10 @@ while read -r cmd args; do
     if [ $cmd = '!ram' ]; then
         sim_args="$sim_args -m"
     fi
+
+    if [ $cmd = '!romport' ]; then
+        sim_args="$sim_args -p $args"
+    fi
 done < <(grep '!' $source)
 
 echo "sim_args $sim_args"

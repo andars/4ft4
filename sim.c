@@ -603,7 +603,7 @@ int exec_instruction(FILE *in) {
 }
 
 void print_usage() {
-    printf("usage: ./sim [-r] [-c <cycle_count>] <binary>\n");
+    printf("usage: ./sim [-r] [-c <cycle_count>] [-p <rom_id>,<port_value>] <binary>\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -618,8 +618,9 @@ int main(int argc, char *argv[]) {
 
     int opt;
     int cycles = -1;
+    char *delim;
 
-    while ((opt = getopt(argc, argv, "rc:m")) != -1) {
+    while ((opt = getopt(argc, argv, "rc:mp:")) != -1) {
         switch (opt) {
         case 'r':
             randomize_state = 1;
@@ -634,6 +635,16 @@ int main(int argc, char *argv[]) {
             break;
         case 'm':
             print_ram = 1;
+            break;
+        case 'p':
+            delim = index(optarg, ',');
+            if (delim == NULL) {
+                print_usage();
+                printf("error: rom port value must be <romid>,<value>, not %s\n", optarg);
+            }
+            int romid = atoi(optarg);
+            int value = atoi(delim + 1);
+            state.rom_ports[romid] = value;
             break;
         default:
             printf("invalid option\n");
