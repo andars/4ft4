@@ -70,7 +70,8 @@ cpu_control cpu_control(
     .pc_control(pc_control),
     .reg_out_enable(reg_out_enable),
     .acc_out_enable(acc_out_enable),
-    .ram_cmd_out(ram_cmd_n)
+    .ram_cmd_out(ram_cmd_n),
+    .rom_cmd_out(rom_cmd)
 );
 
 pc_stack pc_stack(
@@ -114,8 +115,5 @@ datapath datapath(
 assign data = acc_out_enable ? acc :
               reg_out_enable ? regval :
               pc_enable ? pc_word : 4'bz;
-
-// pulse ROM command line low in subcycle 2
-assign rom_cmd = ~(cycle == 3'h2);
 
 endmodule

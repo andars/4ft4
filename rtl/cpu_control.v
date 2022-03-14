@@ -25,7 +25,8 @@ module cpu_control(
     output reg [1:0] pc_control,
     output reg reg_out_enable,
     output reg acc_out_enable,
-    output [3:0] ram_cmd_out
+    output [3:0] ram_cmd_out,
+    output rom_cmd_out
 );
 
 `include "datapath.vh"
@@ -50,6 +51,7 @@ reg [7:0] addr;
 reg [3:0] ram_cmd;
 reg [3:0] ram_cmd_next;
 reg ram_cmd_en;
+reg rom_cmd_en;
 
 always @(posedge clock) begin
     if (reset) begin
@@ -62,6 +64,9 @@ end
 
 assign sync = ~(cycle == 3'b111);
 assign ram_cmd_out = ((ram_cmd_en == 1) || (cycle == 3'h2)) ? ~ram_cmd : 4'hf;
+
+// pulse ROM command line low in subcycle 2
+assign rom_cmd_out = ((rom_cmd_en == 1) || (cycle == 3'h2)) ? 0: 1;
 
 // read data from ROM into an internal register
 // during subcycles 3 and 4
@@ -109,6 +114,7 @@ always @(*) begin
 
     ram_cmd_en = 0;
     ram_cmd_next = ram_cmd;
+    rom_cmd_en = 0;
 
     if (two_word) begin
         // control signals for the second system cycle
@@ -266,6 +272,7 @@ always @(*) begin
                 if (cycle == 3'h6) begin
                     reg_out_enable = 1;
                     ram_cmd_en = 1;
+                    rom_cmd_en = 1;
                     inst_operand_adj = 1'b1;
                 end
                 else if (cycle == 3'h7) begin
@@ -401,6 +408,7 @@ always @(*) begin
             // I/O or memory instruction
             if (cycle == 3'h4) begin
                 ram_cmd_en = 1;
+                rom_cmd_en = 1;
             end
             else begin
                 case (inst[3:0])
@@ -412,6 +420,12 @@ always @(*) begin
                 end
                 4'h1: begin
                     // WMP: write accumulator to RAM output port
+                    if (cycle == 3'h6) begin
+                        acc_out_enable = 1;
+                    end
+                end
+                4'h2: begin
+                    // WRR: write accumulator to ROM output port
                     if (cycle == 3'h6) begin
                         acc_out_enable = 1;
                     end

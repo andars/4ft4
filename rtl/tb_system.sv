@@ -81,6 +81,7 @@ initial begin
     for (i = 0; i < 4; i++) begin
         $display(" stack %1d: 0x%0x", i, dut.cpu.pc_stack.program_counters[i]);
     end
+    $display(" rom 0 port: 0x%1x", dut.rom_1.io);
     for (i = 0; i < 4; i++) begin
         $write(" ram 0 reg %1d:", i);
         for (j = 0; j < 16; j++) begin
