@@ -17,8 +17,14 @@ sim: lint
 	iverilog -DROM_SIZE=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
 	./a.out
 
+LINT_OPTS = -Wall -Wno-PINCONNECTEMPTY
+
+#TODO: clean up these warnings
+LINT_OPTS += -Wno-UNUSED -Wno-UNDRIVEN
+
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)
+	$(VERILATOR) $(LINT_OPTS) --lint-only --top-module wb_system wb_system.v $(SYSTEM_FILES)
 
 TEST_SOURCES := $(sort $(shell find ../tests -name '*.s' | grep -v -f skip.txt))
 $(info skipping $(shell find ../tests -name '*.s' | grep -f skip.txt))
