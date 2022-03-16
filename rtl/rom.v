@@ -9,13 +9,13 @@ module rom(
     inout [3:0] io,
 
     // wishbone backdoor
-    input [31:0] data_i,
-    input [31:0] addr_i,
-    input cyc_i,
-    input strobe_i,
-    input we_i,
-    output [31:0] data_o,
-    output reg ack_o
+    input [31:0] wb_data_i,
+    input [31:0] wb_addr_i,
+    input wb_cyc_i,
+    input wb_strobe_i,
+    input wb_we_i,
+    output [31:0] wb_data_o,
+    output reg wb_ack_o
 );
 
 reg [11:0] address;
@@ -130,19 +130,19 @@ assign data = (cycle == 3'h3) ? memory[address][7:4]
 // wishbone backdoor
 always @(posedge clock) begin
     if (reset) begin
-        ack_o <= 0;
+        wb_ack_o <= 0;
     end else begin
-        ack_o <= 0;
+        wb_ack_o <= 0;
         if (cycle == 3'h7) begin
-            if (!ack_o && cyc_i && strobe_i && we_i) begin
+            if (!wb_ack_o && wb_cyc_i && wb_strobe_i && wb_we_i) begin
                 // TODO: use full data_i word
-                memory[addr_i[11:0]] <= data_i[7:0];
-                ack_o <= 1;
+                memory[wb_addr_i[11:0]] <= wb_data_i[7:0];
+                wb_ack_o <= 1;
             end
         end
     end
 end
-assign data_o = 0;
+assign wb_data_o = 0;
 
 `ifdef COCOTB_SIM
 `ifdef COCOTB_SIM_ROM_TOP

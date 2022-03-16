@@ -11,13 +11,13 @@ async def test_uart_to_wishbone(dut):
 
     wb = WishboneMaster(dut, None, dut.clock,
                         width=32,
-                        signals_dict={"cyc":  "cyc_i",
-                                      "stb":  "strobe_i",
-                                      "we":   "we_i",
-                                      "adr":  "addr_i",
-                                      "datwr":"data_i",
-                                      "datrd":"data_o",
-                                      "ack":  "ack_o"
+                        signals_dict={"cyc":  "wb_cyc_i",
+                                      "stb":  "wb_strobe_i",
+                                      "we":   "wb_we_i",
+                                      "adr":  "wb_addr_i",
+                                      "datwr":"wb_data_i",
+                                      "datrd":"wb_data_o",
+                                      "ack":  "wb_ack_o"
                                      })
 
     # reset

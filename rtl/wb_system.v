@@ -67,13 +67,13 @@ rom rom_0(
     .io(rom_io),
 
     // backdoor wishbone
-    .data_i(wb_data_i),
-    .addr_i(wb_addr_i),
-    .cyc_i(wb_cyc_i),
-    .strobe_i(rom_0_strobe_i),
-    .we_i(wb_we_i),
-    .data_o(rom_0_data_o),
-    .ack_o(rom_0_ack_o)
+    .wb_data_i(wb_data_i),
+    .wb_addr_i(wb_addr_i),
+    .wb_cyc_i(wb_cyc_i),
+    .wb_strobe_i(rom_0_strobe_i),
+    .wb_we_i(wb_we_i),
+    .wb_data_o(rom_0_data_o),
+    .wb_ack_o(rom_0_ack_o)
 );
 
 ram ram_0(
@@ -86,13 +86,13 @@ ram ram_0(
     .p0(1'b0),
 
     // backdoor
-    .data_i(wb_data_i),
-    .addr_i(wb_addr_i),
-    .cyc_i(wb_cyc_i),
-    .strobe_i(ram_0_strobe_i),
-    .we_i(wb_we_i),
-    .data_o(ram_0_data_o),
-    .ack_o(ram_0_ack_o)
+    .wb_data_i(wb_data_i),
+    .wb_addr_i(wb_addr_i),
+    .wb_cyc_i(wb_cyc_i),
+    .wb_strobe_i(ram_0_strobe_i),
+    .wb_we_i(wb_we_i),
+    .wb_data_o(ram_0_data_o),
+    .wb_ack_o(ram_0_ack_o)
 );
 
 ram ram_1(
@@ -106,13 +106,13 @@ ram ram_1(
 
     // unconnected backdoor
     // TODO: connect
-    .data_i(32'h0),
-    .addr_i(32'h0),
-    .cyc_i(1'h0),
-    .strobe_i(1'h0),
-    .we_i(1'h0),
-    .data_o(),
-    .ack_o()
+    .wb_data_i(32'h0),
+    .wb_addr_i(32'h0),
+    .wb_cyc_i(1'h0),
+    .wb_strobe_i(1'h0),
+    .wb_we_i(1'h0),
+    .wb_data_o(),
+    .wb_ack_o()
 );
 
 `ifdef COCOTB_SIM

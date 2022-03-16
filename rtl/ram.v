@@ -10,13 +10,13 @@ module ram(
     output reg [3:0] out,
 
     // wishbone backdoor
-    input [31:0] data_i,
-    input [31:0] addr_i,
-    input cyc_i,
-    input strobe_i,
-    input we_i,
-    output reg [31:0] data_o,
-    output reg ack_o
+    input [31:0] wb_data_i,
+    input [31:0] wb_addr_i,
+    input wb_cyc_i,
+    input wb_strobe_i,
+    input wb_we_i,
+    output reg [31:0] wb_data_o,
+    output reg wb_ack_o
 );
 
 wire cmd;
@@ -159,22 +159,22 @@ assign data = ram_to_data ? memory[reg_addr * 16 + char_addr]
 // TODO: enable reading from output port register
 always @(posedge clock) begin
     if (reset) begin
-        ack_o <= 0;
+        wb_ack_o <= 0;
     end else begin
-        ack_o <= 0;
+        wb_ack_o <= 0;
         if (cycle == 3'h7) begin
-            if (!ack_o && cyc_i && strobe_i) begin
+            if (!wb_ack_o && wb_cyc_i && wb_strobe_i) begin
                 // TODO: use full 32b word to read/write multiple 4b values
-                data_o <= {28'h0, addr_i[6] ? status[addr_i[3:0]] : memory[addr_i[5:0]]};
-                if (we_i) begin
-                    if (addr_i[6] == 0) begin
-                        memory[addr_i[5:0]] <= data_i[3:0];
+                wb_data_o <= {28'h0, wb_addr_i[6] ? status[wb_addr_i[3:0]] : memory[wb_addr_i[5:0]]};
+                if (wb_we_i) begin
+                    if (wb_addr_i[6] == 0) begin
+                        memory[wb_addr_i[5:0]] <= wb_data_i[3:0];
                     end
                     else begin
-                        status[addr_i[3:0]] <= data_i[3:0];
+                        status[wb_addr_i[3:0]] <= wb_data_i[3:0];
                     end
                 end
-                ack_o <= 1;
+                wb_ack_o <= 1;
             end
         end
     end

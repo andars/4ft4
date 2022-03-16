@@ -30,13 +30,13 @@ rom rom_1(
     .io(rom_io),
 
     // unconnected backdoor
-    .data_i(32'h0),
-    .addr_i(32'h0),
-    .cyc_i(1'h0),
-    .strobe_i(1'h0),
-    .we_i(1'h0),
-    .data_o(),
-    .ack_o()
+    .wb_data_i(32'h0),
+    .wb_addr_i(32'h0),
+    .wb_cyc_i(1'h0),
+    .wb_strobe_i(1'h0),
+    .wb_we_i(1'h0),
+    .wb_data_o(),
+    .wb_ack_o()
 );
 
 ram ram_1(
@@ -49,13 +49,13 @@ ram ram_1(
     .p0(1'b0),
 
     // unconnected backdoor
-    .data_i(32'h0),
-    .addr_i(32'h0),
-    .cyc_i(1'h0),
-    .strobe_i(1'h0),
-    .we_i(1'h0),
-    .data_o(),
-    .ack_o()
+    .wb_data_i(32'h0),
+    .wb_addr_i(32'h0),
+    .wb_cyc_i(1'h0),
+    .wb_strobe_i(1'h0),
+    .wb_we_i(1'h0),
+    .wb_data_o(),
+    .wb_ack_o()
 );
 
 ram ram_2(
@@ -68,13 +68,13 @@ ram ram_2(
     .p0(1'b1),
 
     // unconnected backdoor
-    .data_i(32'h0),
-    .addr_i(32'h0),
-    .cyc_i(1'h0),
-    .strobe_i(1'h0),
-    .we_i(1'h0),
-    .data_o(),
-    .ack_o()
+    .wb_data_i(32'h0),
+    .wb_addr_i(32'h0),
+    .wb_cyc_i(1'h0),
+    .wb_strobe_i(1'h0),
+    .wb_we_i(1'h0),
+    .wb_data_o(),
+    .wb_ack_o()
 );
 
 endmodule
