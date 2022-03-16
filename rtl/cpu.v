@@ -3,12 +3,23 @@
 module cpu(
     input clock,
     input reset,
+`ifndef NO_TRISTATE
     inout [3:0] data,
+`else
+    input [3:0] data_i,
+    output [3:0] data_o,
+    output data_en,
+`endif
     input test,
     output sync,
     output rom_cmd,
     output [3:0] ram_cmd_n
 );
+
+`ifndef NO_TRISTATE
+wire [3:0] data_i;
+assign data_i = data;
+`endif
 
 wire pc_enable;
 wire [3:0] pc_word;
@@ -48,7 +59,7 @@ wire reg_out_enable;
 cpu_control cpu_control(
     .clock(clock),
     .reset(reset),
-    .data(data),
+    .data(data_i),
     .take_branch(take_branch),
     .reg_is_zero(reg_is_zero),
     .sync(sync),
@@ -80,7 +91,7 @@ pc_stack pc_stack(
     .control(pc_control),
     .target(12'b0),
     .regval(regval),
-    .data(data),
+    .data(data_i),
     .inst_operand(inst_operand),
     .pc_next_sel(pc_next_sel),
     .pc_write_enable(pc_write_enable),
@@ -93,7 +104,7 @@ pc_stack pc_stack(
 datapath datapath(
     .clock(clock),
     .reset(reset),
-    .data(data),
+    .data(data_i),
     .clear_carry(clear_carry),
     .write_carry(write_carry),
     .clear_accumulator(clear_accumulator),
@@ -112,8 +123,19 @@ datapath datapath(
     .reg_is_zero(reg_is_zero)
 );
 
-assign data = acc_out_enable ? acc :
-              reg_out_enable ? regval :
-              pc_enable ? pc_word : 4'bz;
+
+wire [3:0] data_val;
+
+`ifndef NO_TRISTATE
+wire data_en;
+assign data = data_en ? data_val : 4'bz;
+`else
+assign data_o = data_val;
+`endif
+
+assign data_val = acc_out_enable ? acc :
+                  reg_out_enable ? regval :
+                  pc_enable ? pc_word : 4'h0;
+assign data_en = acc_out_enable | reg_out_enable | pc_enable;
 
 endmodule

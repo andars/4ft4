@@ -20,10 +20,33 @@ wire [3:0] ram_cmd_n;
 wire [3:0] rom_io;
 wire [3:0] ram_out;
 
+`ifdef NO_TRISTATE
+assign data = cpu_data_en ? cpu_data_o
+            : rom_0_data_en ? rom_0_data_o
+            : ram_0_data_en ? ram_0_data_o
+            : ram_1_data_en ? ram_1_data_o
+            : 4'h0;
+
+wire [3:0] cpu_data_o;
+wire cpu_data_en;
+wire [3:0] rom_0_data_o;
+wire rom_0_data_en;
+wire [3:0] ram_0_data_o;
+wire ram_0_data_en;
+wire [3:0] ram_1_data_o;
+wire ram_1_data_en;
+`endif
+
 cpu cpu(
     .clock(clock),
     .reset(reset),
+`ifndef NO_TRISTATE
     .data(data),
+`else
+    .data_i(data),
+    .data_o(cpu_data_o),
+    .data_en(cpu_data_en),
+`endif
     .test(test),
     .sync(sync),
     .rom_cmd(rom_cmd),
@@ -31,11 +54,11 @@ cpu cpu(
 );
 
 reg rom_0_strobe_i;
-wire [31:0] rom_0_data_o;
+wire [31:0] rom_0_wb_data_o;
 wire rom_0_ack_o;
 
 reg ram_0_strobe_i;
-wire [31:0] ram_0_data_o;
+wire [31:0] ram_0_wb_data_o;
 wire ram_0_ack_o;
 
 reg [31:0] selected_data;
@@ -47,11 +70,11 @@ always @(*) begin
     selected_data = 0;
     if (wb_addr_i[17:16] == 2'h0) begin
         rom_0_strobe_i = wb_strobe_i;
-        selected_data = rom_0_data_o;
+        selected_data = rom_0_wb_data_o;
     end
     else if (wb_addr_i[17:16] == 2'h0) begin
         ram_0_strobe_i = wb_strobe_i;
-        selected_data = ram_0_data_o;
+        selected_data = ram_0_wb_data_o;
     end
 end
 
@@ -61,7 +84,13 @@ rom rom_0(
     .clock(clock),
     .reset(reset),
     // frontdoor
+`ifndef NO_TRISTATE
     .data(data),
+`else
+    .data_i(data),
+    .data_o(rom_0_data_o),
+    .data_en(rom_0_data_en),
+`endif
     .sync(sync),
     .cmd(rom_cmd),
     .io(rom_io),
@@ -72,14 +101,20 @@ rom rom_0(
     .wb_cyc_i(wb_cyc_i),
     .wb_strobe_i(rom_0_strobe_i),
     .wb_we_i(wb_we_i),
-    .wb_data_o(rom_0_data_o),
+    .wb_data_o(rom_0_wb_data_o),
     .wb_ack_o(rom_0_ack_o)
 );
 
 ram ram_0(
     .clock(clock),
     .reset(reset),
+`ifndef NO_TRISTATE
     .data(data),
+`else
+    .data_i(data),
+    .data_o(ram_0_data_o),
+    .data_en(ram_0_data_en),
+`endif
     .sync(sync),
     .cmd_n(ram_cmd_n[0]),
     .out(ram_out),
@@ -91,14 +126,20 @@ ram ram_0(
     .wb_cyc_i(wb_cyc_i),
     .wb_strobe_i(ram_0_strobe_i),
     .wb_we_i(wb_we_i),
-    .wb_data_o(ram_0_data_o),
+    .wb_data_o(ram_0_wb_data_o),
     .wb_ack_o(ram_0_ack_o)
 );
 
 ram ram_1(
     .clock(clock),
     .reset(reset),
+`ifndef NO_TRISTATE
     .data(data),
+`else
+    .data_i(data),
+    .data_o(ram_1_data_o),
+    .data_en(ram_1_data_en),
+`endif
     .sync(sync),
     .cmd_n(ram_cmd_n[0]),
     .out(ram_out),

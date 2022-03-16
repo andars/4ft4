@@ -26,6 +26,8 @@ LINT_OPTS += -Wno-UNUSED -Wno-UNDRIVEN
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)
 	$(VERILATOR) $(LINT_OPTS) --lint-only --top-module wb_system wb_system.v $(SYSTEM_FILES)
+	$(VERILATOR) -DNO_TRISTATE --lint-only --top-module system $(SYSTEM_FILES)
+	$(VERILATOR) $(LINT_OPTS) -DNO_TRISTATE --lint-only --top-module wb_system wb_system.v $(SYSTEM_FILES)
 
 TEST_SOURCES := $(sort $(shell find ../tests -name '*.s' | grep -v -f skip.txt))
 $(info skipping $(shell find ../tests -name '*.s' | grep -f skip.txt))
@@ -49,7 +51,7 @@ $(TEST_RUNS): lint
 .PHONY: $(TEST_RUNS)
 $(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
 	mkdir -p $(@D)
-	iverilog -DROM_SIZE=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
+	iverilog -DNO_TRISTATE -DROM_SIZE=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
 	cp $(word 3,$^) rom.hex
 	./a.out > $@
 	mv waves.vcd testruns/$*.vcd
@@ -73,7 +75,7 @@ _out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
 	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$<
 
 _out/$(strip $1).json: $2 | $3
-	yosys -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+	yosys -DNO_TRISTATE -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
 endef
 
 $(eval $(call ICE40_RULES, wb_system, $(WB_SYSTEM_FILES), lint))

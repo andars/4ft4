@@ -3,7 +3,13 @@
 module ram(
     input clock,
     input reset,
+`ifndef NO_TRISTATE
     inout [3:0] data,
+`else
+    input [3:0] data_i,
+    output [3:0] data_o,
+    output data_en,
+`endif
     input sync,
     input cmd_n,
     input p0,
@@ -18,6 +24,11 @@ module ram(
     output reg [31:0] wb_data_o,
     output reg wb_ack_o
 );
+
+`ifndef NO_TRISTATE
+wire [3:0] data_i;
+assign data_i = data;
+`endif
 
 wire cmd;
 assign cmd = !cmd_n;
@@ -52,22 +63,22 @@ always @(posedge clock) begin
         if (cmd) begin
             if (cycle == 3'h6) begin
                 // SRC
-                if (data[3:2] == {1'b0, p0}) begin
+                if (data_i[3:2] == {1'b0, p0}) begin
                     selected <= 1;
-                    reg_addr <= data[1:0];
+                    reg_addr <= data_i[1:0];
                     src_active <= 1;
                 end else begin
                     selected <= 0;
                 end
             end
             if ((cycle == 3'h4) && selected) begin
-                inst <= data;
+                inst <= data_i;
                 inst_active <= 1;
             end
         end else if (cycle == 3'h7) begin
             if (src_active) begin
                 // SRC
-                char_addr <= data;
+                char_addr <= data_i;
                 src_active <= 0;
             end
             inst_active <= 0;
@@ -129,7 +140,7 @@ always @(posedge clock) begin
             memory[i] <= 0;
         end
     end else if (write_ram) begin
-        memory[reg_addr * 16 + char_addr] <= data;
+        memory[reg_addr * 16 + char_addr] <= data_i;
     end
 end
 
@@ -139,7 +150,7 @@ always @(posedge clock) begin
             status[i] <= 0;
         end
     end else if (write_status) begin
-        status[reg_addr * 4 + status_idx] <= data;
+        status[reg_addr * 4 + status_idx] <= data_i;
     end
 end
 
@@ -147,13 +158,21 @@ always @(posedge clock) begin
     if (reset) begin
         out <= 0;
     end else if (write_output_port) begin
-        out <= data;
+        out <= data_i;
     end
 end
 
-assign data = ram_to_data ? memory[reg_addr * 16 + char_addr]
-            : status_to_data ? status[reg_addr * 4 + status_idx]
-            : 4'hz;
+wire [3:0] data_val;
+`ifndef NO_TRISTATE
+wire data_en;
+assign data = data_en ? data_val : 4'bz;
+`else
+assign data_o = data_val;
+`endif
+assign data_val = ram_to_data ? memory[reg_addr * 16 + char_addr]
+                : status_to_data ? status[reg_addr * 4 + status_idx]
+                : 4'h0;
+assign data_en = ram_to_data | status_to_data;
 
 // wishbone backdoor
 // TODO: enable reading from output port register

@@ -3,7 +3,13 @@
 module rom(
     input clock,
     input reset,
+`ifndef NO_TRISTATE
     inout [3:0] data,
+`else
+    input [3:0] data_i,
+    output [3:0] data_o,
+    output data_en,
+`endif
     input sync,
     input cmd,
     inout [3:0] io,
@@ -17,6 +23,11 @@ module rom(
     output [31:0] wb_data_o,
     output reg wb_ack_o
 );
+
+`ifndef NO_TRISTATE
+wire [3:0] data_i;
+assign data_i = data;
+`endif
 
 reg [11:0] address;
 reg [2:0] cycle;
@@ -41,9 +52,9 @@ always @(posedge clock) begin
         address <= 12'b0;
     end
     else begin
-        address[ 3:0] <= (cycle == 3'h0) ? data : address[ 3:0];
-        address[ 7:4] <= (cycle == 3'h1) ? data : address[ 7:4];
-        address[11:8] <= (cycle == 3'h2) ? data : address[11:8];
+        address[ 3:0] <= (cycle == 3'h0) ? data_i : address[ 3:0];
+        address[ 7:4] <= (cycle == 3'h1) ? data_i : address[ 7:4];
+        address[11:8] <= (cycle == 3'h2) ? data_i : address[11:8];
     end
 end
 
@@ -73,7 +84,7 @@ always @(posedge clock) begin
             if (cycle == 3'h6) begin
                 // SRC
                 // TODO: chip id
-                if (data[3:0] == 4'h0) begin
+                if (data_i[3:0] == 4'h0) begin
                     selected <= 1;
                     src_active <= 1;
                 end else begin
@@ -81,7 +92,7 @@ always @(posedge clock) begin
                 end
             end
             if ((cycle == 3'h4) && selected) begin
-                inst <= data;
+                inst <= data_i;
                 inst_active <= 1;
             end
         end else if (cycle == 3'h7) begin
@@ -115,17 +126,27 @@ always @(posedge clock) begin
         output_port <= 0;
     end
     else if (write_output_port) begin
-        output_port <= data;
+        output_port <= data_i;
     end
 end
 
 // TODO: parameter for i/o
 assign io = output_port;
 
+wire [3:0] data_val;
+
+`ifndef NO_TRISTATE
+wire data_en;
+assign data = data_en ? data_val : 4'bz;
+`else
+assign data_o = data_val;
+`endif
+
 // write out ROM data during subcyles 3 and 4
-assign data = (cycle == 3'h3) ? memory[address][7:4]
-            : ((cycle == 3'h4) ? memory[address][3:0]
-            : 4'bz);
+assign data_val = (cycle == 3'h3) ? memory[address][7:4]
+                  : ((cycle == 3'h4) ? memory[address][3:0]
+                  : 4'b0);
+assign data_en = (cycle == 3'h3) || (cycle == 3'h4);
 
 // wishbone backdoor
 always @(posedge clock) begin
