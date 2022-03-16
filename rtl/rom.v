@@ -6,7 +6,16 @@ module rom(
     inout [3:0] data,
     input sync,
     input cmd,
-    inout [3:0] io
+    inout [3:0] io,
+
+    // wishbone backdoor
+    input [31:0] data_i,
+    input [31:0] addr_i,
+    input cyc_i,
+    input strobe_i,
+    input we_i,
+    output [31:0] data_o,
+    output reg ack_o
 );
 
 reg [11:0] address;
@@ -117,5 +126,32 @@ assign io = output_port;
 assign data = (cycle == 3'h3) ? memory[address][7:4]
             : ((cycle == 3'h4) ? memory[address][3:0]
             : 4'bz);
+
+// wishbone backdoor
+always @(posedge clock) begin
+    if (reset) begin
+        ack_o <= 0;
+    end else begin
+        ack_o <= 0;
+        if (cycle == 3'h7) begin
+            if (!ack_o && cyc_i && strobe_i && we_i) begin
+                // TODO: use full data_i word
+                memory[addr_i[11:0]] <= data_i[7:0];
+                ack_o <= 1;
+            end
+        end
+    end
+end
+
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("rom.vcd");
+    $dumpvars;
+    for (i = 0; i < 32; i++) begin
+        $dumpvars(0, memory[i]);
+    end
+    #1;
+end
+`endif
 
 endmodule

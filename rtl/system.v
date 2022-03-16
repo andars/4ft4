@@ -27,7 +27,16 @@ rom rom_1(
     .data(data),
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io)
+    .io(rom_io),
+
+    // unconnected backdoor
+    .data_i(32'h0),
+    .addr_i(32'h0),
+    .cyc_i(1'h0),
+    .strobe_i(1'h0),
+    .we_i(1'h0),
+    .data_o(),
+    .ack_o()
 );
 
 ram ram_1(
