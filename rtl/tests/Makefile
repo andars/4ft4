@@ -2,7 +2,7 @@ SELF:=$(lastword $(MAKEFILE_LIST))
 OUT=$(realpath $(dir $(SELF))/..)/testruns/tests
 $(info writing test output to $(OUT))
 
-TEST_MODULES := rom-wb
+TEST_MODULES := rom-wb ram-wb
 
 .PHONY: all $(TEST_MODULES)
 

@@ -46,7 +46,16 @@ ram ram_1(
     .sync(sync),
     .cmd_n(ram_cmd_n[0]),
     .out(ram_out),
-    .p0(1'b0)
+    .p0(1'b0),
+
+    // unconnected backdoor
+    .data_i(32'h0),
+    .addr_i(32'h0),
+    .cyc_i(1'h0),
+    .strobe_i(1'h0),
+    .we_i(1'h0),
+    .data_o(),
+    .ack_o()
 );
 
 ram ram_2(
@@ -56,7 +65,16 @@ ram ram_2(
     .sync(sync),
     .cmd_n(ram_cmd_n[0]),
     .out(ram_out),
-    .p0(1'b1)
+    .p0(1'b1),
+
+    // unconnected backdoor
+    .data_i(32'h0),
+    .addr_i(32'h0),
+    .cyc_i(1'h0),
+    .strobe_i(1'h0),
+    .we_i(1'h0),
+    .data_o(),
+    .ack_o()
 );
 
 endmodule

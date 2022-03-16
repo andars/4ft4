@@ -7,7 +7,16 @@ module ram(
     input sync,
     input cmd_n,
     input p0,
-    output reg [3:0] out
+    output reg [3:0] out,
+
+    // wishbone backdoor
+    input [31:0] data_i,
+    input [31:0] addr_i,
+    input cyc_i,
+    input strobe_i,
+    input we_i,
+    output reg [31:0] data_o,
+    output reg ack_o
 );
 
 wire cmd;
@@ -145,5 +154,44 @@ end
 assign data = ram_to_data ? memory[reg_addr * 16 + char_addr]
             : status_to_data ? status[reg_addr * 4 + status_idx]
             : 4'hz;
+
+// wishbone backdoor
+// TODO: enable reading from output port register
+always @(posedge clock) begin
+    if (reset) begin
+        ack_o <= 0;
+    end else begin
+        ack_o <= 0;
+        if (cycle == 3'h7) begin
+            if (!ack_o && cyc_i && strobe_i) begin
+                // TODO: use full 32b word to read/write multiple 4b values
+                data_o <= {28'h0, addr_i[6] ? status[addr_i[3:0]] : memory[addr_i[5:0]]};
+                if (we_i) begin
+                    if (addr_i[6] == 0) begin
+                        memory[addr_i[5:0]] <= data_i[3:0];
+                    end
+                    else begin
+                        status[addr_i[3:0]] <= data_i[3:0];
+                    end
+                end
+                ack_o <= 1;
+            end
+        end
+    end
+end
+
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile("ram.vcd");
+    $dumpvars;
+    for (i = 0; i < 64; i++) begin
+        $dumpvars(0, memory[i]);
+    end
+    for (i = 0; i < 16; i++) begin
+        $dumpvars(0, status[i]);
+    end
+    #1;
+end
+`endif
 
 endmodule
