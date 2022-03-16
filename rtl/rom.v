@@ -142,6 +142,7 @@ always @(posedge clock) begin
         end
     end
 end
+assign data_o = 0;
 
 `ifdef COCOTB_SIM
 `ifdef COCOTB_SIM_ROM_TOP
