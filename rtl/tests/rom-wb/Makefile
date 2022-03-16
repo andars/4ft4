@@ -8,4 +8,6 @@ TOPLEVEL = rom
 MODULE = tests
 export PYTHONPATH:=$(dir $(SELF)):$(PYTHONPATH)
 
+COMPILE_ARGS += -DCOCOTB_SIM_ROM_TOP
+
 include $(shell cocotb-config --makefiles)/Makefile.sim

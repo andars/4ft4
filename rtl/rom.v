@@ -144,6 +144,7 @@ always @(posedge clock) begin
 end
 
 `ifdef COCOTB_SIM
+`ifdef COCOTB_SIM_ROM_TOP
 initial begin
     $dumpfile("rom.vcd");
     $dumpvars;
@@ -152,6 +153,7 @@ initial begin
     end
     #1;
 end
+`endif
 `endif
 
 endmodule

@@ -181,6 +181,7 @@ always @(posedge clock) begin
 end
 
 `ifdef COCOTB_SIM
+`ifdef COCOTB_SIM_RAM_TOP
 initial begin
     $dumpfile("ram.vcd");
     $dumpvars;
@@ -192,6 +193,7 @@ initial begin
     end
     #1;
 end
+`endif
 `endif
 
 endmodule

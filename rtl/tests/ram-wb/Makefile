@@ -8,4 +8,6 @@ TOPLEVEL = ram
 MODULE = tests
 export PYTHONPATH:=$(dir $(SELF)):$(PYTHONPATH)
 
+COMPILE_ARGS += -DCOCOTB_SIM_RAM_TOP
+
 include $(shell cocotb-config --makefiles)/Makefile.sim
