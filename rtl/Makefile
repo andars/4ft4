@@ -6,6 +6,7 @@ ROM_BIN ?= ../build/ram/1.bin
 
 CPU_FILES = cpu.v cpu_control.v pc_stack.v datapath.v alu.v
 SYSTEM_FILES = $(CPU_FILES) system.v rom.v ram.v
+WB_SYSTEM_FILES = $(CPU_FILES) wb_system.v ram.v rom.v
 
 waves: sim
 	gtkwave waves.vcd -S signals.tcl #--rcvar 'do_initial_zoom_fit yes'
@@ -60,3 +61,19 @@ $(TEST_WAVES): testruns/%.waves: |testruns/%.log
 
 .PHONY: test
 test: $(TEST_RUNS)
+
+define ICE40_RULES
+_out/$(strip $1).bin: _out/$(strip $1).asc _out/$(strip $1)_timing.txt
+	icepack $$< $$@
+
+_out/$(strip $1)_timing.txt: _out/$(strip $1).asc
+	icetime -d up5k -c 12 -mtr $$@ $$<
+
+_out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
+	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$<
+
+_out/$(strip $1).json: $2 | $3
+	yosys -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+endef
+
+$(eval $(call ICE40_RULES, wb_system, $(WB_SYSTEM_FILES), lint))
