@@ -1,0 +1,27 @@
+set signals [list]
+
+lappend signals "clock"
+lappend signals "reset"
+lappend signals "cycle"
+lappend signals "wb_cyc_i"
+lappend signals "wb_strobe_i"
+lappend signals "wb_we_i"
+lappend signals "wb_addr_i"
+lappend signals "wb_data_i"
+lappend signals "wb_data_o"
+lappend signals "cpu.pc_stack.\\program_counters\[0\]\[11:0\]"
+lappend signals "cpu.pc_stack.\\program_counters\[1\]\[11:0\]"
+lappend signals "cpu.pc_stack.\\program_counters\[2\]\[11:0\]"
+lappend signals "cpu.pc_stack.\\program_counters\[3\]\[11:0\]"
+lappend signals "cpu.pc_stack.index"
+lappend signals "rom_0.\\memory\[0\]\[3:0\]"
+lappend signals "rom_0.\\memory\[1\]\[3:0\]"
+lappend signals "rom_0.\\memory\[16\]\[3:0\]"
+lappend signals "ram_0.\\memory\[0\]\[3:0\]"
+lappend signals "ram_0.\\memory\[1\]\[3:0\]"
+lappend signals "ram_0.\\memory\[16\]\[3:0\]"
+lappend signals "ram_0.\\status\[0\]\[3:0\]"
+lappend signals "ram_0.\\status\[1\]\[3:0\]"
+lappend signals "ram_0.\\status\[2\]\[3:0\]"
+
+set num_added [ gtkwave::addSignalsFromList $signals ]
