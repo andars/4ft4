@@ -75,7 +75,7 @@ always @(*) begin
         rom_0_strobe_i = wb_strobe_i;
         selected_data = rom_0_wb_data_o;
     end
-    else if (wb_addr_i[17:16] == 2'h0) begin
+    else if (wb_addr_i[17:16] == 2'h1) begin
         ram_0_strobe_i = wb_strobe_i;
         selected_data = ram_0_wb_data_o;
     end

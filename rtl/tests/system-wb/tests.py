@@ -27,6 +27,11 @@ async def test_uart_to_wishbone(dut):
 
     dut._log.info("begin test of wb-controlled system")
 
+    # write pattern to start of ram
+    ram_base = 0x10000
+    cmds = [WBOp(ram_base + i, 0xa) for i in range(16)]
+    await wb.send_cycle(cmds)
+
     # LDM 5
     # FIM 0P 0
     # SRC 0P
@@ -43,3 +48,23 @@ async def test_uart_to_wishbone(dut):
 
     # give the cpu some time to run
     await ClockCycles(dut.clock, 8 * 16)
+
+    # read back ram and check that it has not changed
+    cmds = [WBOp(ram_base + i) for i in range(16)]
+    responses = await wb.send_cycle(cmds)
+    values = [transaction.datrd for transaction in responses]
+    dut._log.info("read {}".format([hex(v) for v in values]))
+    assert values == [0xa for i in range(16)]
+
+    # write values to ram
+    ram_base = 0x10000
+    cmds = [WBOp(ram_base + i, i) for i in range(16)]
+    await wb.send_cycle(cmds)
+
+    # then read them back and verify
+    cmds = [WBOp(ram_base + i) for i in range(16)]
+    responses = await wb.send_cycle(cmds)
+
+    values = [transaction.datrd for transaction in responses]
+    dut._log.info("read {}".format([hex(v) for v in values]))
+    assert values == [i for i in range(16)]
