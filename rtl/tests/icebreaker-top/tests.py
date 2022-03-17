@@ -3,7 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
 @cocotb.test()
-async def test_uart_to_wishbone(dut):
+async def test_icebreaker_top(dut):
     # start a 12 MHz clock
     clock = Clock(dut.clock, round(1e3/100), units="ns")
     cocotb.start_soon(clock.start())

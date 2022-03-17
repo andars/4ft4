@@ -4,7 +4,7 @@ from cocotb.triggers import ClockCycles
 from cocotbext.wishbone.driver import WBOp, WishboneMaster
 
 @cocotb.test()
-async def test_uart_to_wishbone(dut):
+async def test_rom_wb_interface(dut):
     # start a 100 MHz clock
     clock = Clock(dut.clock, round(1e3/100), units="ns")
     cocotb.start_soon(clock.start())
