@@ -6,7 +6,8 @@ _VERILOG_SOURCES = icebreaker_top.v \
                    wb_system.v rom.v ram.v \
                    alu.v datapath.v \
                    pc_stack.v \
-                   cpu_control.v cpu.v
+                   cpu_control.v cpu.v \
+                   spoke/uart.v spoke/uart_wb_master.v
 VERILOG_SOURCES = $(_VERILOG_SOURCES:%=$(ROOT)/%)
 
 TOPLEVEL = icebreaker_top

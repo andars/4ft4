@@ -79,7 +79,9 @@ _out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
 	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$<
 
 _out/$(strip $1).json: $2 _out/icebreaker_top.hex | $3
-	yosys -DNO_TRISTATE -DROM_HEX_FILE=\"_out/icebreaker_top.hex\" -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+	yosys -DNO_TRISTATE -DROM_CAPACITY=128 -DROM_HEX_FILE=\"_out/icebreaker_top.hex\" -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
 endef
 
-$(eval $(call ICE40_RULES, icebreaker_top, icebreaker_top.v $(WB_SYSTEM_FILES), lint))
+ICEBREAKER_TOP_FILES = $(WB_SYSTEM_FILES) icebreaker_top.v spoke/uart.v spoke/uart_wb_master.v
+
+$(eval $(call ICE40_RULES, icebreaker_top, $(ICEBREAKER_TOP_FILES), lint))

@@ -7,3 +7,7 @@ set_io -nowarn leds[1]    27
 set_io -nowarn leds[2]    25
 set_io -nowarn leds[3]    23
 
+# UART
+set_io -nowarn serial_rx   6
+set_io -nowarn serial_tx   9
+
