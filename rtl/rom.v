@@ -24,6 +24,13 @@ module rom(
     output reg wb_ack_o
 );
 
+// TODO: should this be a module parameter?
+`ifndef ROM_CAPACITY
+`define ROM_CAPACITY (4096)
+`endif
+localparam ADDR_BITS = $clog2(`ROM_CAPACITY);
+
+
 `ifndef NO_TRISTATE
 wire [3:0] data_i;
 assign data_i = data;
@@ -32,7 +39,10 @@ assign data_i = data;
 reg [11:0] address;
 reg [2:0] cycle;
 
-reg [7:0] memory [4095:0];
+reg [7:0] memory [`ROM_CAPACITY-1:0];
+
+wire [ADDR_BITS-1:0] addr;
+assign addr = address[ADDR_BITS-1:0];
 
 `ifndef ROM_HEX_FILE
 `define ROM_HEX_FILE "rom.hex"
@@ -53,7 +63,7 @@ end
 
 always @(posedge clock) begin
     if (reset) begin
-        address <= 12'b0;
+        address <= 0;
     end
     else begin
         address[ 3:0] <= (cycle == 3'h0) ? data_i : address[ 3:0];
@@ -147,8 +157,8 @@ assign data_o = data_val;
 `endif
 
 // write out ROM data during subcyles 3 and 4
-assign data_val = (cycle == 3'h3) ? memory[address][7:4]
-                  : ((cycle == 3'h4) ? memory[address][3:0]
+assign data_val = (cycle == 3'h3) ? memory[addr][7:4]
+                  : ((cycle == 3'h4) ? memory[addr][3:0]
                   : 4'b0);
 assign data_en = (cycle == 3'h3) || (cycle == 3'h4);
 
@@ -161,7 +171,7 @@ always @(posedge clock) begin
         if (cycle == 3'h7) begin
             if (!wb_ack_o && wb_cyc_i && wb_strobe_i && wb_we_i) begin
                 // TODO: use full data_i word
-                memory[wb_addr_i[11:0]] <= wb_data_i[7:0];
+                memory[wb_addr_i[ADDR_BITS-1:0]] <= wb_data_i[7:0];
                 wb_ack_o <= 1;
             end
         end
