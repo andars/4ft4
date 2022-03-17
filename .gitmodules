@@ -1,0 +1,3 @@
+[submodule "rtl/spoke"]
+	path = rtl/spoke
+	url = https://github.com/andars/spoke
