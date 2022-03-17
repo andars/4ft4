@@ -64,6 +64,10 @@ $(TEST_WAVES): testruns/%.waves: |testruns/%.log
 .PHONY: test
 test: $(TEST_RUNS)
 
+_out/%.hex: %.s
+	../as.py $< _out/$*.s.o
+	xxd -l4096 -p -c1 _out/$*.s.o > $@
+
 define ICE40_RULES
 _out/$(strip $1).bin: _out/$(strip $1).asc _out/$(strip $1)_timing.txt
 	icepack $$< $$@
@@ -74,8 +78,8 @@ _out/$(strip $1)_timing.txt: _out/$(strip $1).asc
 _out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
 	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$<
 
-_out/$(strip $1).json: $2 | $3
-	yosys -DNO_TRISTATE -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+_out/$(strip $1).json: $2 _out/icebreaker_top.hex | $3
+	yosys -DNO_TRISTATE -DROM_HEX_FILE=\"_out/icebreaker_top.hex\" -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
 endef
 
-$(eval $(call ICE40_RULES, wb_system, $(WB_SYSTEM_FILES), lint))
+$(eval $(call ICE40_RULES, icebreaker_top, icebreaker_top.v $(WB_SYSTEM_FILES), lint))

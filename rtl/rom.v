@@ -34,8 +34,12 @@ reg [2:0] cycle;
 
 reg [7:0] memory [4095:0];
 
+`ifndef ROM_HEX_FILE
+`define ROM_HEX_FILE "rom.hex"
+`endif
+
 initial begin
-    $readmemh("rom.hex", memory);
+    $readmemh(`ROM_HEX_FILE, memory);
 end
 
 always @(posedge clock) begin

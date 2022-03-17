@@ -4,6 +4,7 @@ module wb_system(
     input clock,
     input reset,
     input test,
+    output [3:0] rom_out,
     input [31:0] wb_data_i,
     input [31:0] wb_addr_i,
     input wb_cyc_i,
@@ -19,6 +20,8 @@ wire rom_cmd;
 wire [3:0] ram_cmd_n;
 wire [3:0] rom_io;
 wire [3:0] ram_out;
+
+assign rom_out = rom_io;
 
 `ifdef NO_TRISTATE
 assign data = cpu_data_en ? cpu_data_o

@@ -1,0 +1,9 @@
+# 12 MHz clock
+set_io -nowarn clock         35
+
+# LEDs
+set_io -nowarn leds[0]    26
+set_io -nowarn leds[1]    27
+set_io -nowarn leds[2]    25
+set_io -nowarn leds[3]    23
+
