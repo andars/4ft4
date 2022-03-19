@@ -36,13 +36,26 @@ wire [3:0] data_i;
 assign data_i = data;
 `endif
 
-reg [11:0] address;
+reg [7:0] addr_lo;
 reg [2:0] cycle;
 
 reg [7:0] memory [`ROM_CAPACITY-1:0];
+reg [7:0] memory_o;
 
+wire [11:0] addr_full;
 wire [ADDR_BITS-1:0] addr;
-assign addr = address[ADDR_BITS-1:0];
+
+// valid only during subcycle 2
+assign addr_full = {data_i, addr_lo};
+assign addr = addr_full[ADDR_BITS-1:0];
+
+always @(posedge clock) begin
+    // read the memory into a register during cycle 2
+    // so it is ready to output on cycle 3 & 4
+    if (cycle == 3'h2) begin
+        memory_o <= memory[addr];
+    end
+end
 
 `ifndef ROM_HEX_FILE
 `define ROM_HEX_FILE "rom.hex"
@@ -63,12 +76,11 @@ end
 
 always @(posedge clock) begin
     if (reset) begin
-        address <= 0;
+        addr_lo <= 0;
     end
     else begin
-        address[ 3:0] <= (cycle == 3'h0) ? data_i : address[ 3:0];
-        address[ 7:4] <= (cycle == 3'h1) ? data_i : address[ 7:4];
-        address[11:8] <= (cycle == 3'h2) ? data_i : address[11:8];
+        addr_lo[ 3:0] <= (cycle == 3'h0) ? data_i : addr_lo[ 3:0];
+        addr_lo[ 7:4] <= (cycle == 3'h1) ? data_i : addr_lo[ 7:4];
     end
 end
 
@@ -157,8 +169,8 @@ assign data_o = data_val;
 `endif
 
 // write out ROM data during subcyles 3 and 4
-assign data_val = (cycle == 3'h3) ? memory[addr][7:4]
-                  : ((cycle == 3'h4) ? memory[addr][3:0]
+assign data_val = (cycle == 3'h3) ? memory_o[7:4]
+                  : ((cycle == 3'h4) ? memory_o[3:0]
                   : 4'b0);
 assign data_en = (cycle == 3'h3) || (cycle == 3'h4);
 
