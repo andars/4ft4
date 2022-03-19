@@ -201,7 +201,7 @@ def parse_value(f):
     if f[0:2] == '0x':
         v = int(f[2:], 16)
         print("hex -> {:02x} = {}".format(v,v))
-    elif f[-1] == 'P':
+    elif f[-1] == 'P' and f[0].isdigit():
         # register pair symbols
         v = int(f[0])
         assert 0 <= v and v <= 7
