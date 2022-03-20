@@ -27,8 +27,8 @@ async def test_ram_wb_interface(dut):
 
     dut._log.info("begin test of ram wb backdoor")
 
-    write_req = await wb.send_cycle([WBOp(0, 0xa), WBOp(1, 0xb), WBOp(0x10, 0xc), WBOp(0x40, 0xa)])
-    read_req = await wb.send_cycle([WBOp(0), WBOp(1), WBOp(0x10), WBOp(0x40)])
+    write_req = await wb.send_cycle([WBOp(0, 0xa), WBOp(4, 0xb), WBOp(0x40, 0xc), WBOp(0x100, 0xa)])
+    read_req = await wb.send_cycle([WBOp(0), WBOp(4), WBOp(0x40), WBOp(0x100)])
 
     values = [transaction.datrd for transaction in read_req]
     dut._log.info("read {}".format([hex(v) for v in values]))

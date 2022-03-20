@@ -192,13 +192,13 @@ always @(posedge clock) begin
         if (cycle == 3'h7) begin
             if (!wb_ack_o && wb_cyc_i && wb_strobe_i) begin
                 // TODO: use full 32b word to read/write multiple 4b values
-                wb_data_o <= {28'h0, wb_addr_i[6] ? status[wb_addr_i[3:0]] : memory[wb_addr_i[5:0]]};
+                wb_data_o <= {28'h0, wb_addr_i[8] ? status[wb_addr_i[5:2]] : memory[wb_addr_i[7:2]]};
                 if (wb_we_i) begin
-                    if (wb_addr_i[6] == 0) begin
-                        memory[wb_addr_i[5:0]] <= wb_data_i[3:0];
+                    if (wb_addr_i[8] == 0) begin
+                        memory[wb_addr_i[7:2]] <= wb_data_i[3:0];
                     end
                     else begin
-                        status[wb_addr_i[3:0]] <= wb_data_i[3:0];
+                        status[wb_addr_i[5:2]] <= wb_data_i[3:0];
                     end
                 end
                 wb_ack_o <= 1;

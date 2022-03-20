@@ -201,7 +201,7 @@ always @(posedge clock) begin
         if (cycle == 3'h7) begin
             if (!wb_ack_o && wb_cyc_i && wb_strobe_i && wb_we_i) begin
                 // TODO: use full data_i word
-                memory[wb_addr_i[ADDR_BITS-1:0]] <= wb_data_i[7:0];
+                memory[wb_addr_i[ADDR_BITS+1:2]] <= wb_data_i[7:0];
                 wb_ack_o <= 1;
             end
         end
