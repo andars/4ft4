@@ -136,9 +136,11 @@ integer i;
 
 always @(posedge clock) begin
     if (reset) begin
+        `ifndef NO_RAM_RESET
         for (i = 0; i < 64; i++) begin
             memory[i] <= 0;
         end
+        `endif
     end else if (write_ram) begin
         memory[reg_addr * 16 + char_addr] <= data_i;
     end
@@ -162,6 +164,12 @@ always @(posedge clock) begin
     end
 end
 
+reg [3:0] memory_o;
+
+always @(posedge clock) begin
+    memory_o <= memory[reg_addr * 16 + char_addr];
+end
+
 wire [3:0] data_val;
 `ifndef NO_TRISTATE
 wire data_en;
@@ -169,7 +177,7 @@ assign data = data_en ? data_val : 4'bz;
 `else
 assign data_o = data_val;
 `endif
-assign data_val = ram_to_data ? memory[reg_addr * 16 + char_addr]
+assign data_val = ram_to_data ? memory_o
                 : status_to_data ? status[reg_addr * 4 + status_idx]
                 : 4'h0;
 assign data_en = ram_to_data | status_to_data;
