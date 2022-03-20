@@ -24,9 +24,12 @@ module rom(
     output reg wb_ack_o
 );
 
+parameter CHIP_ID = 4'h0;
+parameter ROM_FILE = "";
+
 // TODO: should this be a module parameter?
 `ifndef ROM_CAPACITY
-`define ROM_CAPACITY (4096)
+`define ROM_CAPACITY (256)
 `endif
 localparam ADDR_BITS = $clog2(`ROM_CAPACITY);
 
@@ -57,12 +60,14 @@ always @(posedge clock) begin
     end
 end
 
-`ifndef ROM_HEX_FILE
-`define ROM_HEX_FILE "rom.hex"
+`ifndef ROM_HEX_FILE_BASE
+`define ROM_HEX_FILE_BASE "rom.hex"
 `endif
 
 initial begin
-    $readmemh(`ROM_HEX_FILE, memory);
+    if (ROM_FILE != "") begin
+        $readmemh(ROM_FILE, memory);
+    end
 end
 
 always @(posedge clock) begin
@@ -73,6 +78,19 @@ always @(posedge clock) begin
         cycle <= cycle + 1;
     end
 end
+
+reg ce;
+always @(posedge clock) begin
+    if (reset) begin
+        ce <= 0;
+    end
+    else begin
+        if (cycle == 3'h2) begin
+            ce <= (data_i == CHIP_ID);
+        end
+    end
+end
+
 
 always @(posedge clock) begin
     if (reset) begin
@@ -172,7 +190,7 @@ assign data_o = data_val;
 assign data_val = (cycle == 3'h3) ? memory_o[7:4]
                   : ((cycle == 3'h4) ? memory_o[3:0]
                   : 4'b0);
-assign data_en = (cycle == 3'h3) || (cycle == 3'h4);
+assign data_en = ce && ((cycle == 3'h3) || (cycle == 3'h4));
 
 // wishbone backdoor
 always @(posedge clock) begin

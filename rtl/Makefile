@@ -15,13 +15,14 @@ waves: sim
 sim: lint
 	xxd -l4096 -p -c1 $(ROM_BIN) > rom.hex
 	cat rom.hex
+	awk 'BEGIN{c=0} NR%256==0{++c}{print $0 > "rom_"c".hex"}' rom.hex
 	iverilog -DROM_SIZE=$(firstword $(shell wc -l rom.hex)) tb_system.sv $(SYSTEM_FILES)
 	./a.out
 
 LINT_OPTS = -Wall -Wno-PINCONNECTEMPTY
 
 #TODO: clean up these warnings
-LINT_OPTS += -Wno-UNUSED -Wno-UNDRIVEN
+LINT_OPTS += -Wno-UNUSED -Wno-UNDRIVEN -DROM_FILE_BASE=\"rom.hex\"
 
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)
@@ -53,6 +54,7 @@ $(TEST_RUNS): testruns/%.log: ../build/%.bin ../tests/%.s testruns/%.hex
 	mkdir -p $(@D)
 	iverilog -DNO_TRISTATE -DROM_SIZE=$(firstword $(shell wc -l testruns/$*.hex)) tb_system.sv $(SYSTEM_FILES)
 	cp $(word 3,$^) rom.hex
+	split -d -a 1 -l 256 --additional-suffix=".hex" rom.hex "rom_"
 	./a.out > $@
 	mv waves.vcd testruns/$*.vcd
 	bash ./check.sh $(word 2,$^) $@ #|| (cat $@; echo "test $(word 2,$^) failed: $@"; exit 1)
@@ -64,9 +66,10 @@ $(TEST_WAVES): testruns/%.waves: |testruns/%.log
 .PHONY: test
 test: $(TEST_RUNS)
 
-_out/%.hex: %.s
+_out/%_0.hex: %.s
 	../as.py $< _out/$*.s.o
-	xxd -l4096 -p -c1 _out/$*.s.o > $@
+	xxd -l4096 -p -c1 _out/$*.s.o > $@.full
+	split -d -a 1 -l 256 --additional-suffix=".hex" $@.full "_out/$*_"
 
 define ICE40_RULES
 _out/$(strip $1).bin: _out/$(strip $1).asc _out/$(strip $1)_timing.txt
@@ -78,8 +81,8 @@ _out/$(strip $1)_timing.txt: _out/$(strip $1).asc
 _out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
 	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$<
 
-_out/$(strip $1).json: $2 _out/icebreaker_top.hex | $3
-	yosys -DNO_TRISTATE -DNO_RAM_RESET -DROM_CAPACITY=128 -DROM_HEX_FILE=\"_out/icebreaker_top.hex\" -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+_out/$(strip $1).json: $2 _out/icebreaker_top_0.hex | $3
+	yosys -DNO_TRISTATE -DNO_RAM_RESET -DROM_CAPACITY=128 -DROM_FILE_BASE=\"_out/icebreaker_top\" -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
 endef
 
 ICEBREAKER_TOP_FILES = $(WB_SYSTEM_FILES) icebreaker_top.v spoke/uart.v spoke/uart_wb_master.v

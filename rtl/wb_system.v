@@ -83,7 +83,7 @@ end
 
 assign wb_ack_o = rom_0_ack_o | ram_0_ack_o;
 
-rom rom_0(
+rom #(.CHIP_ID(4'h0), .ROM_FILE({`ROM_FILE_BASE, "_0.hex"})) rom_0 (
     .clock(clock),
     .reset(reset),
     // frontdoor

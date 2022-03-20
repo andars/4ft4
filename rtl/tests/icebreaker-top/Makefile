@@ -16,6 +16,6 @@ export PYTHONPATH:=$(dir $(SELF)):$(PYTHONPATH)
 
 COMPILE_ARGS += -I$(ROOT)
 COMPILE_ARGS += -DCOCOTB_SIM_ICEBREAKER_TOP
-COMPILE_ARGS += -DROM_HEX_FILE=\"$(dir $(SELF))/rom.hex\"
+COMPILE_ARGS += -DROM_FILE_BASE=\"$(dir $(SELF))/rom\"
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
