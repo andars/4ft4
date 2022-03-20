@@ -47,3 +47,6 @@ WRR
 ISZ 5 L5
 
 JUN S
+
+= 511
+NOP

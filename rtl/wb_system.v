@@ -1,10 +1,18 @@
 `default_nettype none
 
+`ifndef SYSTEM_NUM_ROMS
+`define SYSTEM_NUM_ROMS 1
+`endif
+
+`ifndef SYSTEM_NUM_RAMS
+`define SYSTEM_NUM_RAMS 2
+`endif
+
 module wb_system(
     input clock,
     input reset,
     input test,
-    output [3:0] rom_out,
+    output [4 * `SYSTEM_NUM_ROMS - 1:0] rom_out,
     input [31:0] wb_data_i,
     input [31:0] wb_addr_i,
     input wb_cyc_i,
@@ -14,18 +22,11 @@ module wb_system(
     output wb_ack_o
 );
 
-`ifndef SYSTEM_NUM_ROMS
-`define SYSTEM_NUM_ROMS 1
-`endif
-
-`ifndef SYSTEM_NUM_RAMS
-`define SYSTEM_NUM_RAMS 2
-`endif
 
 wire sync;
 wire rom_cmd;
 wire [3:0] ram_cmd_n;
-wire [3:0] rom_io;
+wire [4 * `SYSTEM_NUM_ROMS - 1:0] rom_io;
 wire [3:0] ram_out;
 
 assign rom_out = rom_io;
@@ -156,7 +157,7 @@ generate for (ii = 0; ii < `SYSTEM_NUM_ROMS; ii = ii + 1) begin
     `endif
         .sync(sync),
         .cmd(rom_cmd),
-        .io(rom_io),
+        .io(rom_io[4*ii+3:4*ii]),
 
         // backdoor wishbone
         .wb_data_i(wb_data_i),
