@@ -32,20 +32,6 @@ async def test_system_wb_interface(dut):
     cmds = [WBOp(ram_base + 4*i, 0xa) for i in range(16)]
     await wb.send_cycle(cmds)
 
-    # LDM 5
-    # FIM 0P 0
-    # SRC 0P
-    # WRM
-    program = [0xd5, 0x20, 0x00, 0x21, 0xe0]
-
-    # write the program at an offset because the wb writes
-    # currently will race with the cpu (which will start at 0).
-    offset = 10
-
-    cmds = [WBOp(4 * (i + offset), program[i]) for i in range(len(program))]
-
-    await wb.send_cycle(cmds)
-
     # give the cpu some time to run
     await ClockCycles(dut.clock, 8 * 16)
 
@@ -56,15 +42,40 @@ async def test_system_wb_interface(dut):
     dut._log.info("read {}".format([hex(v) for v in values]))
     assert values == [0xa for i in range(16)]
 
-    # write values to ram
-    ram_base = 0x10000
-    cmds = [WBOp(ram_base + 4*i, i) for i in range(16)]
+    # LDM 5
+    # FIM 0P 0
+    # SRC 0P
+    # WRM
+    program = [0xd5, 0x20, 0x00, 0x21, 0xe0]
+
+    # write the program at an offset because the wb writes
+    # currently will race with the cpu (which will start at 0).
+    offset = 0x40
+
+    cmds = [WBOp(4 * (i + offset), program[i]) for i in range(len(program))]
+
     await wb.send_cycle(cmds)
 
-    # then read them back and verify
-    cmds = [WBOp(ram_base + 4*i) for i in range(16)]
-    responses = await wb.send_cycle(cmds)
+    # give the cpu some more time to run
+    await ClockCycles(dut.clock, 16 * 16)
 
+    # read back ram[0] to verify the program executed
+    responses = await wb.send_cycle([WBOp(ram_base)])
     values = [transaction.datrd for transaction in responses]
     dut._log.info("read {}".format([hex(v) for v in values]))
-    assert values == [i for i in range(16)]
+    assert values == [0x5]
+
+
+    # write values to ram
+    ram_base = 0x10000
+    for r in range(2):
+        cmds = [WBOp(ram_base + 0x200 * r + 4*i, i) for i in range(16)]
+        await wb.send_cycle(cmds)
+
+        # then read them back and verify
+        cmds = [WBOp(ram_base + 4*i) for i in range(16)]
+        responses = await wb.send_cycle(cmds)
+
+        values = [transaction.datrd for transaction in responses]
+        dut._log.info("read {}".format([hex(v) for v in values]))
+        assert values == [i for i in range(16)]

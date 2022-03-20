@@ -23,6 +23,7 @@ LINT_OPTS = -Wall -Wno-PINCONNECTEMPTY
 
 #TODO: clean up these warnings
 LINT_OPTS += -Wno-UNUSED -Wno-UNDRIVEN -DROM_FILE_BASE=\"rom.hex\"
+LINT_OPTS += --unroll-count 256
 
 lint:
 	$(VERILATOR) --lint-only --top-module system $(SYSTEM_FILES)

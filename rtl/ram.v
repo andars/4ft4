@@ -25,6 +25,8 @@ module ram(
     output reg wb_ack_o
 );
 
+parameter CHIP_ID = 0;
+
 `ifndef NO_TRISTATE
 wire [3:0] data_i;
 assign data_i = data;
@@ -63,7 +65,7 @@ always @(posedge clock) begin
         if (cmd) begin
             if (cycle == 3'h6) begin
                 // SRC
-                if (data_i[3:2] == {1'b0, p0}) begin
+                if (data_i[3:2] == {CHIP_ID[0], p0}) begin
                     selected <= 1;
                     reg_addr <= data_i[1:0];
                     src_active <= 1;
