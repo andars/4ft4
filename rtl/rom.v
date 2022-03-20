@@ -106,9 +106,11 @@ integer i;
 
 always @(posedge clock) begin
     if (reset) begin
-        for (i = 0; i < 256; i++) begin
-            //memory[i] <= 8'hff - i[7:0];
+        `ifdef WITH_ROM_RESET
+        for (i = 0; i < `ROM_CAPACITY; i++) begin
+            memory[i] <= 0;
         end
+        `endif
     end
 end
 
