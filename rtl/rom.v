@@ -134,8 +134,7 @@ always @(posedge clock) begin
         if (cmd == 0) begin
             if (cycle == 3'h6) begin
                 // SRC
-                // TODO: chip id
-                if (data_i[3:0] == 4'h0) begin
+                if (data_i[3:0] == CHIP_ID) begin
                     selected <= 1;
                     src_active <= 1;
                 end else begin

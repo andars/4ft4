@@ -10,7 +10,11 @@ wire [3:0] data;
 wire sync;
 wire rom_cmd;
 wire [3:0] ram_cmd_n;
-wire [3:0] rom_io;
+wire [3:0] rom_1_io;
+wire [3:0] rom_2_io;
+wire [3:0] rom_3_io;
+wire [3:0] rom_4_io;
+wire [3:0] rom_5_io;
 wire [3:0] ram_out;
 
 wire halt;
@@ -73,7 +77,7 @@ rom #(.CHIP_ID(4'h0), .ROM_FILE("rom_0.hex")) rom_1 (
 `endif
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io),
+    .io(rom_1_io),
 
     // unconnected backdoor
     .wb_data_i(32'h0),
@@ -98,7 +102,7 @@ rom #(.CHIP_ID(4'h1), .ROM_FILE("rom_1.hex")) rom_2 (
 `endif
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io),
+    .io(rom_2_io),
 
     // unconnected backdoor
     .wb_data_i(32'h0),
@@ -123,7 +127,7 @@ rom #(.CHIP_ID(4'h2), .ROM_FILE("rom_2.hex")) rom_3 (
 `endif
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io),
+    .io(rom_3_io),
 
     // unconnected backdoor
     .wb_data_i(32'h0),
@@ -148,7 +152,7 @@ rom #(.CHIP_ID(4'h3), .ROM_FILE("rom_3.hex")) rom_4 (
 `endif
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io),
+    .io(rom_4_io),
 
     // unconnected backdoor
     .wb_data_i(32'h0),
@@ -173,7 +177,7 @@ rom #(.CHIP_ID(4'h4), .ROM_FILE("rom_4.hex")) rom_5 (
 `endif
     .sync(sync),
     .cmd(rom_cmd),
-    .io(rom_io),
+    .io(rom_5_io),
 
     // unconnected backdoor
     .wb_data_i(32'h0),
