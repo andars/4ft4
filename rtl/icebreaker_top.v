@@ -12,7 +12,7 @@ wire reset;
 wire [4*`SYSTEM_NUM_ROMS-1:0] rom_out;
 wire [4*`SYSTEM_NUM_RAMS-1:0] ram_out;
 
-assign leds = rom_out[3:0];
+assign leds = ram_out[3:0];
 
 wire [31:0] data_to_sys;
 wire [31:0] data_from_sys;

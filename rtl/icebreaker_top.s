@@ -1,11 +1,11 @@
 S,
-/ select rom 0
+/ select ram 0
 FIM 0P 0
 SRC 0P
 
 / write 11 to the output port
 LDM 11
-WRR
+WMP
 
 / delay loop
 LDM 0
@@ -42,7 +42,7 @@ ISZ 4 L4
 
 / write R5 to the output port
 LD 5
-WRR
+WMP
 
 ISZ 5 L5
 
