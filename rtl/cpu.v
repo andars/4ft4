@@ -3,6 +3,7 @@
 module cpu(
     input clock,
     input reset,
+    input halt,
 `ifndef NO_TRISTATE
     inout [3:0] data,
 `else
@@ -59,6 +60,7 @@ wire reg_out_enable;
 cpu_control cpu_control(
     .clock(clock),
     .reset(reset),
+    .halt(halt),
     .data(data_i),
     .take_branch(take_branch),
     .reg_is_zero(reg_is_zero),
@@ -88,6 +90,7 @@ cpu_control cpu_control(
 pc_stack pc_stack(
     .clock(clock),
     .reset(reset),
+    .halt(halt),
     .control(pc_control),
     .target(12'b0),
     .regval(regval),
@@ -104,6 +107,7 @@ pc_stack pc_stack(
 datapath datapath(
     .clock(clock),
     .reset(reset),
+    .halt(halt),
     .data(data_i),
     .clear_carry(clear_carry),
     .write_carry(write_carry),

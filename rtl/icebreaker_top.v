@@ -21,9 +21,14 @@ wire cyc;
 wire strobe;
 wire we;
 
+// TODO: enable controlling this over uart->wishbone
+wire halt;
+assign halt = 1'b0;
+
 wb_system sys(
     .clock(clock),
     .reset(reset),
+    .halt(halt),
     .rom_out(rom_out),
 
     .wb_data_i(data_to_sys),

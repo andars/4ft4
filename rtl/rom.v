@@ -3,6 +3,7 @@
 module rom(
     input clock,
     input reset,
+    input halt,
 `ifndef NO_TRISTATE
     inout [3:0] data,
 `else
@@ -53,10 +54,14 @@ assign addr_full = {data_i, addr_lo};
 assign addr = addr_full[ADDR_BITS-1:0];
 
 always @(posedge clock) begin
-    // read the memory into a register during cycle 2
-    // so it is ready to output on cycle 3 & 4
-    if (cycle == 3'h2) begin
-        memory_o <= memory[addr];
+    if (reset) begin
+        memory_o <= 0;
+    end else if (!halt) begin
+        // read the memory into a register during cycle 2
+        // so it is ready to output on cycle 3 & 4
+        if (cycle == 3'h2) begin
+            memory_o <= memory[addr];
+        end
     end
 end
 
@@ -74,7 +79,7 @@ always @(posedge clock) begin
     if (reset) begin
         cycle <= 3'b0;
     end
-    else begin
+    else if (!halt) begin
         cycle <= cycle + 1;
     end
 end
@@ -84,7 +89,7 @@ always @(posedge clock) begin
     if (reset) begin
         ce <= 0;
     end
-    else begin
+    else if (!halt) begin
         if (cycle == 3'h2) begin
             ce <= (data_i == CHIP_ID);
         end
@@ -96,7 +101,7 @@ always @(posedge clock) begin
     if (reset) begin
         addr_lo <= 0;
     end
-    else begin
+    else if (!halt) begin
         addr_lo[ 3:0] <= (cycle == 3'h0) ? data_i : addr_lo[ 3:0];
         addr_lo[ 7:4] <= (cycle == 3'h1) ? data_i : addr_lo[ 7:4];
     end
@@ -125,7 +130,7 @@ always @(posedge clock) begin
         inst <= 0;
         src_active <= 0;
         inst_active <= 0;
-    end else begin
+    end else if (!halt) begin
         if (cmd == 0) begin
             if (cycle == 3'h6) begin
                 // SRC
@@ -171,8 +176,10 @@ always @(posedge clock) begin
     if (reset) begin
         output_port <= 0;
     end
-    else if (write_output_port) begin
-        output_port <= data_i;
+    else if (!halt) begin
+        if (write_output_port) begin
+            output_port <= data_i;
+        end
     end
 end
 
@@ -200,7 +207,7 @@ always @(posedge clock) begin
         wb_ack_o <= 0;
     end else begin
         wb_ack_o <= 0;
-        if (cycle == 3'h7) begin
+        if ((cycle == 3'h7) || halt) begin
             if (!wb_ack_o && wb_cyc_i && wb_strobe_i && wb_we_i) begin
                 // TODO: use full data_i word
                 memory[wb_addr_i[ADDR_BITS+1:2]] <= wb_data_i[7:0];

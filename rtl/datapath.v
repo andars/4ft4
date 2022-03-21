@@ -3,6 +3,7 @@
 module datapath(
     input clock,
     input reset,
+    input halt,
     input [3:0] data,
     input clear_carry,
     input write_carry,
@@ -67,7 +68,7 @@ always @(posedge clock) begin
         accumulator <= 0;
         carry <= 1;
     end
-    else begin
+    else if (!halt) begin
         if (clear_carry) begin
             carry <= 0;
         end
@@ -96,7 +97,7 @@ always @(posedge clock) begin
            registers[i] <= 0;
         end
     end
-    else begin
+    else if (!halt) begin
         if (write_register) begin
             registers[inst_operand] <= reg_input;
         end

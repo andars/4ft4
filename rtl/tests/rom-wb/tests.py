@@ -20,6 +20,8 @@ async def test_rom_wb_interface(dut):
                                       "ack":  "wb_ack_o"
                                      })
 
+    dut.halt.value = 0
+
     # reset
     dut.reset.value = 1
     await ClockCycles(dut.clock, 32)

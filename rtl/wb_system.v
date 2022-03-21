@@ -11,6 +11,7 @@
 module wb_system(
     input clock,
     input reset,
+    input halt,
     input test,
     output [4 * `SYSTEM_NUM_ROMS - 1:0] rom_out,
     input [31:0] wb_data_i,
@@ -67,6 +68,7 @@ wire [3:0] data;
 cpu cpu(
     .clock(clock),
     .reset(reset),
+    .halt(halt),
 `ifndef NO_TRISTATE
     .data(data),
 `else
@@ -147,6 +149,7 @@ generate for (ii = 0; ii < `SYSTEM_NUM_ROMS; ii = ii + 1) begin
     rom #(.CHIP_ID(ii), .ROM_FILE({`ROM_FILE_BASE, "_", "0" + {4'h0, ii[3:0]}, ".hex"})) rom_ii (
         .clock(clock),
         .reset(reset),
+        .halt(halt),
         // frontdoor
     `ifndef NO_TRISTATE
         .data(data),
@@ -194,6 +197,7 @@ generate for (j = 0; j < `SYSTEM_NUM_RAMS; j = j + 1) begin
     ram #(.CHIP_ID(j[1])) ram_j(
         .clock(clock),
         .reset(reset),
+        .halt(halt),
     `ifndef NO_TRISTATE
         .data(data),
     `else

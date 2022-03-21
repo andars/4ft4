@@ -3,6 +3,7 @@
 module cpu_control(
     input clock,
     input reset,
+    input halt,
     input [3:0] data,
     input take_branch,
     input reg_is_zero,
@@ -57,7 +58,7 @@ always @(posedge clock) begin
     if (reset) begin
         cycle <= 3'b0;
     end
-    else begin
+    else if (!halt) begin
         cycle <= cycle + 1;
     end
 end
@@ -74,12 +75,14 @@ always @(posedge clock) begin
     if (reset) begin
         inst <= 0;
     end
-    else if (!two_word) begin
-        if (cycle == 3'h3) begin
-            inst[7:4] <= data;
-        end
-        else if (cycle == 3'h4) begin
-            inst[3:0] <= data;
+    else if (!halt) begin
+        if (!two_word) begin
+            if (cycle == 3'h3) begin
+                inst[7:4] <= data;
+            end
+            else if (cycle == 3'h4) begin
+                inst[3:0] <= data;
+            end
         end
     end
 end
@@ -640,7 +643,7 @@ always @(posedge clock) begin
         two_word <= 0;
         ram_cmd <= 4'h1;
     end
-    else begin
+    else if (!halt) begin
         two_word <= two_word_next;
         ram_cmd <= ram_cmd_next;
     end

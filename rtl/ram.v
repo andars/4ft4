@@ -3,6 +3,7 @@
 module ram(
     input clock,
     input reset,
+    input halt,
 `ifndef NO_TRISTATE
     inout [3:0] data,
 `else
@@ -40,7 +41,7 @@ always @(posedge clock) begin
     if (reset) begin
         cycle <= 3'b0;
     end
-    else begin
+    else if (!halt) begin
         cycle <= cycle + 1;
     end
 end
@@ -61,7 +62,7 @@ always @(posedge clock) begin
         inst <= 0;
         src_active <= 0;
         inst_active <= 0;
-    end else begin
+    end else if (!halt) begin
         if (cmd) begin
             if (cycle == 3'h6) begin
                 // SRC
@@ -143,8 +144,10 @@ always @(posedge clock) begin
             memory[i] <= 0;
         end
         `endif
-    end else if (write_ram) begin
-        memory[reg_addr * 16 + char_addr] <= data_i;
+    end else if (!halt) begin
+        if (write_ram) begin
+            memory[reg_addr * 16 + char_addr] <= data_i;
+        end
     end
 end
 
@@ -153,23 +156,31 @@ always @(posedge clock) begin
         for (i = 0; i < 16; i++) begin
             status[i] <= 0;
         end
-    end else if (write_status) begin
-        status[reg_addr * 4 + status_idx] <= data_i;
+    end else if (!halt) begin
+        if (write_status) begin
+            status[reg_addr * 4 + status_idx] <= data_i;
+        end
     end
 end
 
 always @(posedge clock) begin
     if (reset) begin
         out <= 0;
-    end else if (write_output_port) begin
-        out <= data_i;
+    end else if (!halt) begin
+        if (write_output_port) begin
+            out <= data_i;
+        end
     end
 end
 
 reg [3:0] memory_o;
 
 always @(posedge clock) begin
-    memory_o <= memory[reg_addr * 16 + char_addr];
+    if (reset) begin
+        memory_o <= 0;
+    end else if (!halt) begin
+        memory_o <= memory[reg_addr * 16 + char_addr];
+    end
 end
 
 wire [3:0] data_val;
@@ -191,7 +202,7 @@ always @(posedge clock) begin
         wb_ack_o <= 0;
     end else begin
         wb_ack_o <= 0;
-        if (cycle == 3'h7) begin
+        if ((cycle == 3'h7) || halt) begin
             if (!wb_ack_o && wb_cyc_i && wb_strobe_i) begin
                 // TODO: use full 32b word to read/write multiple 4b values
                 wb_data_o <= {28'h0, wb_addr_i[8] ? status[wb_addr_i[5:2]] : memory[wb_addr_i[7:2]]};

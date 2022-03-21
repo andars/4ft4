@@ -3,6 +3,7 @@
 module pc_stack(
     input clock,
     input reset,
+    input halt,
     input [1:0] control,
     input [11:0] target,
     input [3:0] regval,
@@ -44,36 +45,38 @@ always @(posedge clock) begin
         index <= 0;
         carry <= 0;
     end
-    else if (cycle == 3'h0) begin
-        {carry, program_counters[index][3:0]} <= program_counters[index][3:0] + 1;
-    end
-    else if (cycle == 3'h1) begin
-        {carry, program_counters[index][7:4]} <= program_counters[index][7:4] + {3'b0, carry};
-    end
-    else if (cycle == 3'h2) begin
-        program_counters[index][11:8] <= program_counters[index][11:8] + {3'b0, carry};
+    else if (!halt) begin
+        if (cycle == 3'h0) begin
+            {carry, program_counters[index][3:0]} <= program_counters[index][3:0] + 1;
+        end
+        else if (cycle == 3'h1) begin
+            {carry, program_counters[index][7:4]} <= program_counters[index][7:4] + {3'b0, carry};
+        end
+        else if (cycle == 3'h2) begin
+            program_counters[index][11:8] <= program_counters[index][11:8] + {3'b0, carry};
 
-        // and update the slot index
-        index <= index_next;
-    end
-    else if (pc_write_enable != 3'b0) begin
-        if (pc_write_enable[0]) begin
-            program_counters[index][3:0] <= pc_next;
+            // and update the slot index
+            index <= index_next;
         end
-        else if (pc_write_enable[1]) begin
-            program_counters[index][7:4] <= pc_next;
-        end
-        else begin
-            program_counters[index][11:8] <= pc_next;
-        end
-    end
-    else begin
-        // store the target in the current slot
-        if (0) begin
-            program_counters[index] <= target;
+        else if (pc_write_enable != 3'b0) begin
+            if (pc_write_enable[0]) begin
+                program_counters[index][3:0] <= pc_next;
+            end
+            else if (pc_write_enable[1]) begin
+                program_counters[index][7:4] <= pc_next;
+            end
+            else begin
+                program_counters[index][11:8] <= pc_next;
+            end
         end
         else begin
-            program_counters[index] <= program_counters[index];
+            // store the target in the current slot
+            if (0) begin
+                program_counters[index] <= target;
+            end
+            else begin
+                program_counters[index] <= program_counters[index];
+            end
         end
     end
 end
