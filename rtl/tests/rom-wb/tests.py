@@ -3,8 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from cocotbext.wishbone.driver import WBOp, WishboneMaster
 
-@cocotb.test()
-async def test_rom_wb_interface(dut):
+async def rom_wb_test(dut, halt):
     # start a 100 MHz clock
     clock = Clock(dut.clock, round(1e3/100), units="ns")
     cocotb.start_soon(clock.start())
@@ -20,7 +19,7 @@ async def test_rom_wb_interface(dut):
                                       "ack":  "wb_ack_o"
                                      })
 
-    dut.halt.value = 0
+    dut.halt.value = halt
 
     # reset
     dut.reset.value = 1
@@ -29,4 +28,12 @@ async def test_rom_wb_interface(dut):
 
     dut._log.info("begin test of rom wb backdoor")
 
-    write_req = await wb.send_cycle([WBOp(0, 0xab), WBOp(4, 0xcb), WBOp(0x40, 0xcf), WBOp(0x54, 0xed)])
+    write_req = await wb.send_cycle([WBOp(0, 0xab+halt), WBOp(4, 0xcb+halt), WBOp(0x40, 0xcf+halt), WBOp(0x54, 0xed+halt)])
+
+@cocotb.test()
+async def test_rom_wb_interface(dut):
+    await rom_wb_test(dut, 0)
+
+@cocotb.test()
+async def test_rom_wb_interface_halted(dut):
+    await rom_wb_test(dut, 1)

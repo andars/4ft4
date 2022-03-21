@@ -3,8 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from cocotbext.wishbone.driver import WBOp, WishboneMaster
 
-@cocotb.test()
-async def test_ram_wb_interface(dut):
+async def ram_wb_test(dut, halt):
     # start a 100 MHz clock
     clock = Clock(dut.clock, round(1e3/100), units="ns")
     cocotb.start_soon(clock.start())
@@ -20,7 +19,7 @@ async def test_ram_wb_interface(dut):
                                       "ack":  "wb_ack_o"
                                      })
 
-    dut.halt.value = 0
+    dut.halt.value = halt
 
     # reset
     dut.reset.value = 1
@@ -36,3 +35,12 @@ async def test_ram_wb_interface(dut):
     dut._log.info("read {}".format([hex(v) for v in values]))
 
     assert values == [0xa, 0xb, 0xc, 0xa]
+
+
+@cocotb.test()
+async def test_ram_wb_interface(dut):
+    await ram_wb_test(dut, 0)
+
+@cocotb.test()
+async def test_ram_wb_interface_halted(dut):
+    await ram_wb_test(dut, 1)
