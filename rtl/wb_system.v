@@ -14,6 +14,7 @@ module wb_system(
     input halt,
     input test,
     output [4 * `SYSTEM_NUM_ROMS - 1:0] rom_out,
+    output [4 * `SYSTEM_NUM_RAMS - 1:0] ram_out,
     input [31:0] wb_data_i,
     input [31:0] wb_addr_i,
     input wb_cyc_i,
@@ -28,7 +29,6 @@ wire sync;
 wire rom_cmd;
 wire [3:0] ram_cmd_n;
 wire [4 * `SYSTEM_NUM_ROMS - 1:0] rom_io;
-wire [3:0] ram_out;
 
 assign rom_out = rom_io;
 
@@ -207,7 +207,7 @@ generate for (j = 0; j < `SYSTEM_NUM_RAMS; j = j + 1) begin
     `endif
         .sync(sync),
         .cmd_n(ram_cmd_n_j),
-        .out(ram_out),
+        .out(ram_out[4*j+3:4*j]),
         .p0(j[0]),
 
         // backdoor

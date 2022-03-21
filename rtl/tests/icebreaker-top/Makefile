@@ -18,5 +18,6 @@ COMPILE_ARGS += -I$(ROOT)
 COMPILE_ARGS += -DCOCOTB_SIM_ICEBREAKER_TOP
 COMPILE_ARGS += -DROM_FILE_BASE=\"$(dir $(SELF))/rom\"
 COMPILE_ARGS += -DSYSTEM_NUM_ROMS=2
+COMPILE_ARGS += -DSYSTEM_NUM_RAMS=2
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
