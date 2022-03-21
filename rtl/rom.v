@@ -13,7 +13,7 @@ module rom(
 `endif
     input sync,
     input cmd,
-    inout [3:0] io,
+    input [3:0] in,
 
     // wishbone backdoor
     input [31:0] wb_data_i,
@@ -27,6 +27,8 @@ module rom(
 
 parameter CHIP_ID = 4'h0;
 parameter ROM_FILE = "";
+
+// TODO: parameter for i/o?
 
 // TODO: should this be a module parameter?
 `ifndef ROM_CAPACITY
@@ -154,14 +156,19 @@ end
 
 reg [3:0] output_port;
 reg write_output_port;
+reg input_to_data;
 
 always @(*) begin
     write_output_port = 0;
+    input_to_data = 0;
     if (inst_active) begin
         if (cycle == 3'h6) begin
             case (inst)
             4'h2: begin
                 write_output_port = 1;
+            end
+            4'ha: begin
+                input_to_data = 1;
             end
             default: begin
             end
@@ -182,8 +189,6 @@ always @(posedge clock) begin
     end
 end
 
-// TODO: parameter for i/o
-assign io = output_port;
 
 wire [3:0] data_val;
 
@@ -197,8 +202,9 @@ assign data_o = data_val;
 // write out ROM data during subcyles 3 and 4
 assign data_val = (cycle == 3'h3) ? memory_o[7:4]
                   : ((cycle == 3'h4) ? memory_o[3:0]
+                  : input_to_data ? in
                   : 4'b0);
-assign data_en = ce && ((cycle == 3'h3) || (cycle == 3'h4));
+assign data_en = (ce && ((cycle == 3'h3) || (cycle == 3'h4))) || input_to_data;
 
 // wishbone backdoor
 always @(posedge clock) begin

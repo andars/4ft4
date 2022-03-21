@@ -9,8 +9,10 @@ module icebreaker_top(
 );
 
 wire reset;
-wire [4*`SYSTEM_NUM_ROMS-1:0] rom_out;
+wire [4*`SYSTEM_NUM_ROMS-1:0] rom_in;
 wire [4*`SYSTEM_NUM_RAMS-1:0] ram_out;
+
+assign rom_in = 0;
 
 assign leds = ram_out[3:0];
 
@@ -30,7 +32,7 @@ wb_system sys(
     .clock(clock),
     .reset(reset),
     .halt(halt),
-    .rom_out(rom_out),
+    .rom_in(rom_in),
     .ram_out(ram_out),
 
     .wb_data_i(data_to_sys),

@@ -459,6 +459,13 @@ always @(*) begin
                         write_accumulator = 1;
                     end
                 end
+                4'ha: begin
+                    // RDR: read ROM io to accumulator
+                    if (cycle == 3'h6) begin
+                        acc_input_sel = ACC_IN_FROM_DATA;
+                        write_accumulator = 1;
+                    end
+                end
                 4'hb: begin
                     // ADM: add RAM to accumulator
                     if (cycle == 3'h6) begin

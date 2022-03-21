@@ -13,7 +13,7 @@ module wb_system(
     input reset,
     input halt,
     input test,
-    output [4 * `SYSTEM_NUM_ROMS - 1:0] rom_out,
+    input [4 * `SYSTEM_NUM_ROMS - 1:0] rom_in,
     output [4 * `SYSTEM_NUM_RAMS - 1:0] ram_out,
     input [31:0] wb_data_i,
     input [31:0] wb_addr_i,
@@ -28,9 +28,6 @@ module wb_system(
 wire sync;
 wire rom_cmd;
 wire [3:0] ram_cmd_n;
-wire [4 * `SYSTEM_NUM_ROMS - 1:0] rom_io;
-
-assign rom_out = rom_io;
 
 `ifdef NO_TRISTATE
 reg [3:0] data;
@@ -160,7 +157,7 @@ generate for (ii = 0; ii < `SYSTEM_NUM_ROMS; ii = ii + 1) begin
     `endif
         .sync(sync),
         .cmd(rom_cmd),
-        .io(rom_io[4*ii+3:4*ii]),
+        .in(rom_in[4*ii+3:4*ii]),
 
         // backdoor wishbone
         .wb_data_i(wb_data_i),

@@ -18,7 +18,9 @@ SRC 7P
 RDR
 XCH 1
 
-!expect rom 0 port: 0x5
 !expect register  0: 0x5
-!expect rom 1 port: 0x7
 !expect register  1: 0x7
+
+/ ignore - see rdr.0
+/ expect rom 0 port: 0x5
+/ expect rom 1 port: 0x7
