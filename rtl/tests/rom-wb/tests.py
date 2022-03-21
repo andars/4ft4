@@ -29,4 +29,4 @@ async def test_rom_wb_interface(dut):
 
     dut._log.info("begin test of rom wb backdoor")
 
-    write_req = await wb.send_cycle([WBOp(0, 0xab), WBOp(1, 0xcb), WBOp(0x10, 0xcf), WBOp(0x15, 0xed)])
+    write_req = await wb.send_cycle([WBOp(0, 0xab), WBOp(4, 0xcb), WBOp(0x40, 0xcf), WBOp(0x54, 0xed)])
